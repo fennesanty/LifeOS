@@ -148,7 +148,8 @@ body::after {
   background: rgba(255,255,255,0.06);
   border-color: rgba(255,255,255,0.10);
 }
-.bot-tab-icon { font-size: 18px; line-height: 1; }
+.bot-tab-icon { display: inline-flex; line-height: 1; }
+.bot-tab-icon svg { width: 17px; height: 17px; }
 .bot-tab-label {
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.10em;
@@ -815,9 +816,10 @@ html, body { scrollbar-width: none; -ms-overflow-style: none; }
 }
 .ord-empty-card.hidden { display: none; }
 .ord-empty-icon {
-  font-size: 36px; margin-bottom: 8px;
+  display: inline-flex; margin-bottom: 8px;
   opacity: 0.6;
 }
+.ord-empty-icon svg { width: 32px; height: 32px; }
 .ord-empty-title {
   font-size: 15px; font-weight: 700;
   color: var(--text-primary); margin-bottom: 4px;
@@ -970,9 +972,10 @@ html, body { scrollbar-width: none; -ms-overflow-style: none; }
 }
 .wish-empty-card.hidden { display: none; }
 .wish-empty-icon {
-  font-size: 36px; margin-bottom: 8px;
+  display: inline-flex; margin-bottom: 8px;
   opacity: 0.6;
 }
+.wish-empty-icon svg { width: 32px; height: 32px; }
 .wish-empty-title {
   font-size: 15px; font-weight: 700;
   color: var(--text-primary); margin-bottom: 4px;
@@ -1379,7 +1382,7 @@ html, body { scrollbar-width: none; -ms-overflow-style: none; }
 
 /* ============================================================
    DATE FIELDS — wrap each date input in a label that shows a
-   📅 emoji prefix so it's obvious what the field is. The native
+   calendar icon prefix so it's obvious what the field is. The native
    picker icon gets a dark-mode filter so it shows up on the
    dark background instead of vanishing into it.
    ============================================================ */
@@ -1397,10 +1400,12 @@ html, body { scrollbar-width: none; -ms-overflow-style: none; }
   cursor: pointer;
 }
 .date-field .date-emoji {
-  font-size: 15px;
+  display: inline-flex;
   line-height: 1;
   flex-shrink: 0;
+  color: var(--text-tertiary);
 }
+.date-field .date-emoji svg { width: 14px; height: 14px; }
 .date-field input[type="date"] {
   background: transparent !important;
   border: none !important;
@@ -1554,7 +1559,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   gap: 10px;
   margin-bottom: 12px;
 }
-.scan-head-icon { font-size: 20px; line-height: 1.2; }
+.scan-head-icon { display: inline-flex; line-height: 1.2; color: var(--text-secondary); }
+.scan-head-icon svg { width: 19px; height: 19px; }
 .scan-title {
   font-size: 13px;
   font-weight: 700;
@@ -1590,7 +1596,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-color: rgba(255,138,138,0.40);
   background: rgba(255,138,138,0.06);
 }
-.scan-dz-icon { font-size: 22px; margin-bottom: 6px; }
+.scan-dz-icon { display: inline-flex; margin-bottom: 6px; color: var(--text-tertiary); }
+.scan-dz-icon svg { width: 22px; height: 22px; }
 .scan-dz-text {
   font-size: 12.5px;
   color: var(--text-secondary);
@@ -1917,7 +1924,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   <!-- ===== SCAN ANYTHING — AI receipt / screenshot importer ===== -->
   <div class="card scan-card" id="scanCard">
     <div class="scan-head">
-      <div class="scan-head-icon">🧾</div>
+      <div class="scan-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h12v19l-3-2-3 2-3-2-3 2V2Z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg></div>
       <div>
         <div class="scan-title">Scan anything</div>
         <div class="scan-subtitle">Drop a receipt or a bank screenshot — AI reads it, you name the account</div>
@@ -1928,7 +1935,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       <input type="file" id="scanFileInput" accept="image/*" hidden />
       <div class="scan-dz-idle" id="scanDzIdle">
         <div>
-          <div class="scan-dz-icon">📷</div>
+          <div class="scan-dz-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
           <div class="scan-dz-text">Drag &amp; drop, <b>click to upload</b>, or paste (⌘V) an image</div>
         </div>
       </div>
@@ -1977,10 +1984,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
             <div class="scan-field" id="scanCatField">
               <label for="scanCategory">Category (new accounts)</label>
               <select id="scanCategory">
-                <option value="bank">🏦 Bank</option>
-                <option value="stocks">📈 Stocks</option>
-                <option value="crypto">🪙 Crypto</option>
-                <option value="other">💼 Other</option>
+                <option value="bank">Bank</option>
+                <option value="stocks">Stocks</option>
+                <option value="crypto">Crypto</option>
+                <option value="other">Other</option>
               </select>
             </div>
           </div>
@@ -2096,7 +2103,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <div class="card-grid" style="gap:10px">
       <!-- Bank accounts -->
       <div class="card nw-subcard">
-        <div class="label" style="display:flex;justify-content:space-between;align-items:center"><span>🏦 Bank accounts</span><span id="bankTotal" style="font-size:13px;color:var(--text-primary);font-weight:600">0</span></div>
+        <div class="label" style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6"/><path d="M5 10v9M9 10v9M15 10v9M19 10v9"/><path d="M3 19h18"/></svg>Bank accounts</span><span id="bankTotal" style="font-size:13px;color:var(--text-primary);font-weight:600">0</span></div>
         <div id="bankList" class="nw-list"></div>
         <div class="quick-add">
           <input type="text" placeholder="Account name" id="bankName" />
@@ -2106,7 +2113,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       </div>
       <!-- Stocks / Investments -->
       <div class="card nw-subcard">
-        <div class="label" style="display:flex;justify-content:space-between;align-items:center"><span>📈 Stocks / Investments</span><span id="stocksTotal" style="font-size:13px;color:var(--text-primary);font-weight:600">0</span></div>
+        <div class="label" style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>Stocks / Investments</span><span id="stocksTotal" style="font-size:13px;color:var(--text-primary);font-weight:600">0</span></div>
         <div id="stocksList" class="nw-list"></div>
         <div class="quick-add">
           <input type="text" placeholder="Stock / fund" id="stocksName" />
@@ -2116,7 +2123,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       </div>
       <!-- Crypto -->
       <div class="card nw-subcard">
-        <div class="label" style="display:flex;justify-content:space-between;align-items:center"><span>🪙 Crypto</span><span id="cryptoTotal" style="font-size:13px;color:var(--text-primary);font-weight:600">0</span></div>
+        <div class="label" style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2 0 0 1 2.5-1.5c1.5 0 2.5 1 2.5 2s-1 1.5-2.5 2-2.5 1-2.5 2 1 2 2.5 2a2.5 2 0 0 0 2.5-1.5" stroke-linecap="round"/></svg>Crypto</span><span id="cryptoTotal" style="font-size:13px;color:var(--text-primary);font-weight:600">0</span></div>
         <div id="cryptoList" class="nw-list"></div>
         <div class="quick-add">
           <input type="text" placeholder="Coin / wallet" id="cryptoName" />
@@ -2126,7 +2133,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       </div>
       <!-- Other assets -->
       <div class="card nw-subcard">
-        <div class="label" style="display:flex;justify-content:space-between;align-items:center"><span>💼 Other assets</span><span id="otherTotal" style="font-size:13px;color:var(--text-primary);font-weight:600">0</span></div>
+        <div class="label" style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="2" y1="13" x2="22" y2="13"/></svg>Other assets</span><span id="otherTotal" style="font-size:13px;color:var(--text-primary);font-weight:600">0</span></div>
         <div id="otherList" class="nw-list"></div>
         <div class="quick-add">
           <input type="text" placeholder="Asset name" id="otherName" />
@@ -2166,7 +2173,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         <option value="yearly">Yearly</option>
         <option value="weekly">Weekly</option>
       </select>
-      <label class="date-field" title="Next renewal date" style="min-width:150px"><span class="date-emoji" aria-hidden="true">📅</span><input type="date" id="subRenewal" /></label>
+      <label class="date-field" title="Next renewal date" style="min-width:150px"><span class="date-emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg></span><input type="date" id="subRenewal" /></label>
       <select id="subFromCat" title="Which net worth account to deduct from" style="padding:6px 10px;border:0.5px solid var(--border);border-radius:var(--radius-md);font-size:12px;font-family:inherit;background:var(--bg-card);color:var(--text-primary);min-width:130px">
         <option value="">No accounts yet</option>
       </select>
@@ -2199,7 +2206,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       <select id="ordFromCat" class="ord-input ord-input-from" title="Which net worth account this comes out of">
         <option value="">No accounts yet</option>
       </select>
-      <label class="date-field ord-input-date" title="Expected arrival"><span class="date-emoji" aria-hidden="true">📅</span><input type="date" id="ordArrival" /></label>
+      <label class="date-field ord-input-date" title="Expected arrival"><span class="date-emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg></span><input type="date" id="ordArrival" /></label>
       <button class="ord-add-btn" id="ordAddBtn" onclick="window.__addOrder && window.__addOrder()">+ Add Order</button>
     </div>
     <div class="ord-add-preview" id="ordAddPreview">Type a cost — preview will show what % of net worth it takes.</div>
@@ -2212,7 +2219,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   </div>
   <div id="ordList"></div>
   <div class="ord-empty-card" id="ordEmpty">
-    <div class="ord-empty-icon">📦</div>
+    <div class="ord-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div>
     <div class="ord-empty-title">Nothing on the way</div>
     <div class="ord-empty-sub">Log an order above. Pick the account it comes out of, the expected arrival date, and the dashboard will show what % of your net worth it costs.</div>
   </div>
@@ -2262,7 +2269,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   </div>
   <div id="wishList"></div>
   <div class="wish-empty-card" id="wishEmpty">
-    <div class="wish-empty-icon">🎯</div>
+    <div class="wish-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></div>
     <div class="wish-empty-title">No wishes yet</div>
     <div class="wish-empty-sub">Add anything you're saving for — the dashboard will calculate what % of your net worth it'd cost.</div>
   </div>
@@ -2295,23 +2302,23 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 <!-- ===== BOTTOM TAB BAR ===== -->
 <nav class="bottom-tabs" id="bottomTabs" aria-label="Sections">
   <button class="bot-tab active" data-tab="net">
-    <span class="bot-tab-icon">📊</span>
+    <span class="bot-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="20" x2="4" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="9"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span>
     <span class="bot-tab-label">Net Worth</span>
   </button>
   <button class="bot-tab" data-tab="subs">
-    <span class="bot-tab-icon">🔁</span>
+    <span class="bot-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 1 1 5.64 5.64L23 10"/></svg></span>
     <span class="bot-tab-label">Subs</span>
   </button>
   <button class="bot-tab" data-tab="incoming">
-    <span class="bot-tab-icon">📦</span>
+    <span class="bot-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
     <span class="bot-tab-label">Orders</span>
   </button>
   <button class="bot-tab" data-tab="wish">
-    <span class="bot-tab-icon">🎯</span>
+    <span class="bot-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></span>
     <span class="bot-tab-label">Wishlist</span>
   </button>
   <button class="bot-tab" data-tab="nova">
-    <span class="bot-tab-icon">✨</span>
+    <span class="bot-tab-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.6 3.6 2 6 6 8-4 2-5.4 4.4-6 8-.6-3.6-2-6-6-8 4-2 5.4-4.4 6-8Z"/></svg></span>
     <span class="bot-tab-label">Nova</span>
   </button>
 </nav>
@@ -2979,8 +2986,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       actions.style.cssText = 'display:flex;flex-direction:column;gap:4px;align-items:center';
       const editBtn = document.createElement('button');
       editBtn.title = 'Edit';
-      editBtn.style.cssText = 'background:transparent;border:1px solid rgba(255,255,255,0.10);color:var(--text-tertiary);cursor:pointer;font-size:12px;padding:3px 7px;border-radius:5px;font-family:inherit;line-height:1';
-      editBtn.textContent = '✏';
+      editBtn.style.cssText = 'background:transparent;border:1px solid rgba(255,255,255,0.10);color:var(--text-tertiary);cursor:pointer;display:inline-flex;padding:4px 7px;border-radius:5px;font-family:inherit;line-height:1';
+      editBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
       editBtn.addEventListener('click', () => editSubInline(idx));
       const del = document.createElement('button');
       del.title = 'Delete';
@@ -3003,7 +3010,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         const arr = storeGet('subs') || [];
         if (!arr[i]) return;
         if (!arr[i].autoDeduct && (!arr[i].fromCat || !arr[i].fromAccount)) {
-          alert('Pick a "From account" first (use the ✏ edit button) so the deduction knows where to take the money from.');
+          alert('Pick a "From account" first (use the edit button) so the deduction knows where to take the money from.');
           return;
         }
         arr[i].autoDeduct = !arr[i].autoDeduct;
@@ -3027,7 +3034,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     if (!sel) return;
     const prev = sel.value;
     const accounts = (typeof listAllNwAccounts === 'function') ? listAllNwAccounts() : [];
-    const ICONS = { bank: '🏦', stocks: '📈', crypto: '🪙', other: '💼' };
+    const ICONS = {
+      bank: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 10l9-6 9 6"/><path d="M5 10v9M9 10v9M15 10v9M19 10v9"/><path d="M3 19h18"/></svg>',
+      stocks: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>',
+      crypto: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2 0 0 1 2.5-1.5c1.5 0 2.5 1 2.5 2s-1 1.5-2.5 2-2.5 1-2.5 2 1 2 2.5 2a2.5 2 0 0 0 2.5-1.5" stroke-linecap="round"/></svg>',
+      other: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="2" y1="13" x2="22" y2="13"/></svg>'
+    };
     if (!accounts.length) {
       sel.innerHTML = '<option value="">No accounts yet</option>';
       sel.disabled = true;
@@ -3036,7 +3048,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     sel.disabled = false;
     sel.innerHTML = accounts.map(a => {
       const value = a.catKey + '::' + a.itemName;
-      return '<option value="' + value + '">' + ICONS[a.catKey] + ' ' + escapeHtml(a.itemName) + '</option>';
+      return '<option value="' + value + '">' + escapeHtml(a.itemName) + '</option>';
     }).join('');
     if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
   }
@@ -3105,11 +3117,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     ).join('');
     // Build From-account options from the live NW accounts
     const accounts = (typeof listAllNwAccounts === 'function') ? listAllNwAccounts() : [];
-    const ICONS = { bank: '🏦', stocks: '📈', crypto: '🪙', other: '💼' };
+    const ICONS = {
+      bank: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 10l9-6 9 6"/><path d="M5 10v9M9 10v9M15 10v9M19 10v9"/><path d="M3 19h18"/></svg>',
+      stocks: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>',
+      crypto: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2 0 0 1 2.5-1.5c1.5 0 2.5 1 2.5 2s-1 1.5-2.5 2-2.5 1-2.5 2 1 2 2.5 2a2.5 2 0 0 0 2.5-1.5" stroke-linecap="round"/></svg>',
+      other: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="2" y1="13" x2="22" y2="13"/></svg>'
+    };
     const currentFrom = (it.fromCat && it.fromAccount) ? (it.fromCat + '::' + it.fromAccount) : '';
     const fromOpts = '<option value="">No account linked</option>' + accounts.map(a => {
       const v = a.catKey + '::' + a.itemName;
-      return '<option value="' + v + '"' + (v === currentFrom ? ' selected' : '') + '>' + ICONS[a.catKey] + ' ' + escapeHtml(a.itemName) + '</option>';
+      return '<option value="' + v + '"' + (v === currentFrom ? ' selected' : '') + '>' + escapeHtml(a.itemName) + '</option>';
     }).join('');
     row.innerHTML = '';
     row.style.gridTemplateColumns = '1fr';
@@ -3121,7 +3138,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       '<input type="number" step="0.01" class="se-amt" value="' + Number(enteredAmt).toFixed(2) + '" style="width:90px;padding:6px 10px;border:0.5px solid rgba(255,255,255,0.10);border-radius:var(--radius-md);font-size:12px;font-family:inherit;background:var(--bg-card);color:var(--text-primary)" />' +
       '<select class="se-ccy" style="padding:6px 10px;border:0.5px solid rgba(255,255,255,0.10);border-radius:var(--radius-md);font-size:12px;font-family:inherit;background:var(--bg-card);color:var(--text-primary)">' + ccyOpts + '</select>' +
       '<select class="se-per" style="padding:6px 10px;border:0.5px solid rgba(255,255,255,0.10);border-radius:var(--radius-md);font-size:12px;font-family:inherit;background:var(--bg-card);color:var(--text-primary)">' + periodOpts + '</select>' +
-      '<label class="date-field" style="min-width:140px"><span class="date-emoji" aria-hidden="true">📅</span><input type="date" class="se-ren" value="' + (it.renewal && /^\d{4}-\d{2}-\d{2}/.test(it.renewal) ? it.renewal.slice(0,10) : '') + '" /></label>' +
+      '<label class="date-field" style="min-width:140px"><span class="date-emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg></span><input type="date" class="se-ren" value="' + (it.renewal && /^\d{4}-\d{2}-\d{2}/.test(it.renewal) ? it.renewal.slice(0,10) : '') + '" /></label>' +
       '<select class="se-from" style="padding:6px 10px;border:0.5px solid rgba(255,255,255,0.10);border-radius:var(--radius-md);font-size:12px;font-family:inherit;background:var(--bg-card);color:var(--text-primary);min-width:130px">' + fromOpts + '</select>' +
       '<label class="sub-auto-toggle" style="padding:6px 10px"><input type="checkbox" class="se-auto"' + (it.autoDeduct ? ' checked' : '') + ' /><span class="sub-auto-track"><span class="sub-auto-thumb"></span></span><span class="sub-auto-label">Auto-deduct</span></label>' +
       '<button class="se-save quick-add-btn">Save</button>' +
@@ -3410,7 +3427,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     if (!sel) return;
     const accounts = listAllNwAccounts();
     const prev = sel.value;
-    const ICONS = { bank: '🏦', stocks: '📈', crypto: '🪙', other: '💼' };
+    const ICONS = {
+      bank: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 10l9-6 9 6"/><path d="M5 10v9M9 10v9M15 10v9M19 10v9"/><path d="M3 19h18"/></svg>',
+      stocks: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>',
+      crypto: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2 0 0 1 2.5-1.5c1.5 0 2.5 1 2.5 2s-1 1.5-2.5 2-2.5 1-2.5 2 1 2 2.5 2a2.5 2 0 0 0 2.5-1.5" stroke-linecap="round"/></svg>',
+      other: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="2" y1="13" x2="22" y2="13"/></svg>'
+    };
     if (!accounts.length) {
       sel.innerHTML = '<option value="">No accounts yet</option>';
       sel.disabled = true;
@@ -3419,7 +3441,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     sel.disabled = false;
     sel.innerHTML = accounts.map(a => {
       const value = a.catKey + '::' + a.itemName;
-      return '<option value="' + value + '">' + ICONS[a.catKey] + ' ' + escapeHtml(a.itemName) + '</option>';
+      return '<option value="' + value + '">' + escapeHtml(a.itemName) + '</option>';
     }).join('');
     if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
   }
@@ -3528,7 +3550,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       alert('Add at least one net worth account before deducting.');
       return;
     }
-    const ICONS = { bank: '🏦', stocks: '📈', crypto: '🪙', other: '💼' };
+    const ICONS = {
+      bank: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 10l9-6 9 6"/><path d="M5 10v9M9 10v9M15 10v9M19 10v9"/><path d="M3 19h18"/></svg>',
+      stocks: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>',
+      crypto: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2 0 0 1 2.5-1.5c1.5 0 2.5 1 2.5 2s-1 1.5-2.5 2-2.5 1-2.5 2 1 2 2.5 2a2.5 2 0 0 0 2.5-1.5" stroke-linecap="round"/></svg>',
+      other: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="2" y1="13" x2="22" y2="13"/></svg>'
+    };
     const cost = Number(order.amount) || 0;
     const optsHtml = accounts.map(a => {
       const insufficient = a.amountCHF < cost - 0.005;
@@ -3863,7 +3890,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       scanBusy = false;
       scanDzBusy.classList.add('hidden');
       scanDzIdle.classList.add('hidden');
-      scanDzError.textContent = '⚠️ ' + msg;
+      scanDzError.textContent = msg;
       scanDzError.classList.remove('hidden');
       scanDropzone.classList.add('has-error');
       scanConfirm.classList.add('hidden');
@@ -3965,7 +3992,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         sentence = 'Will deduct ' + fmtMoney(amountCHF) + ' from ' + name + ' (' + catLabel + ') → ' + fmtMoney(nextCHF) + '.';
       }
       if (nextCHF < 0) {
-        sentence += ' ⚠️ This goes negative.';
+        sentence += ' This goes negative.';
         scanHintEl.classList.add('warn');
       }
       scanHintEl.textContent = sentence;

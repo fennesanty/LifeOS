@@ -232,7 +232,8 @@ body::after {
   gap: 6px;
   max-width: 280px;
 }
-.day-ring-status { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.day-ring-status { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.day-ring-status svg { width: 13px; height: 13px; flex-shrink: 0; }
 .day-ring-remaining { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
 .day-ring-hours { font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); }
 @media (max-width: 480px) {
@@ -333,7 +334,8 @@ body::after {
   letter-spacing: 0.10em; text-transform: uppercase;
   transition: background 0.25s, color 0.25s, border-color 0.25s;
 }
-.gm-streak-icon { font-size: 13px; }
+.gm-streak-icon { display: inline-flex; }
+.gm-streak-icon svg { width: 13px; height: 13px; }
 .gm-streak-num {
   font-family: var(--font-mono);
   font-weight: 700;
@@ -467,13 +469,14 @@ body::after {
 .gm-queue-btn {
   border: 0; background: transparent;
   color: var(--text-tertiary);
-  font-size: 14px;
+  display: inline-flex;
   cursor: pointer;
   padding: 4px 6px;
   border-radius: 6px;
   opacity: 0.55;
   transition: opacity 0.2s, color 0.2s, transform 0.1s;
 }
+.gm-queue-btn svg { width: 13px; height: 13px; }
 .gm-queue-btn:hover { opacity: 1; }
 .gm-queue-btn.gm-queue-active {
   color: #F2C063;
@@ -567,6 +570,7 @@ body::after {
 .gm-add:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .gm-add:active { transform: translateY(0); }
 
+.gm-polish svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 5px; }
 .gm-polish {
   padding: 11px 18px;
   border: 1px solid rgba(255,255,255,0.10);
@@ -657,7 +661,7 @@ body::after {
           </div>
         </div>
         <div class="gm-streak" id="gmStreak">
-          <span class="gm-streak-icon">⚡</span>
+          <span class="gm-streak-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-2 8 11-13h-7l2-7Z"/></svg></span>
           <span class="gm-streak-num" id="gmStreakNum">0</span>
           <span>day streak</span>
         </div>
@@ -669,7 +673,7 @@ body::after {
       <div class="goal-input-wrap gm-input-wrap">
         <input id="goalInput" class="gm-input" type="text" placeholder="Add a goal for today…" autocomplete="off">
         <button type="button" id="goalAddBtn"    class="gm-add">+ Add</button>
-        <button type="button" id="goalPolishBtn" class="gm-polish">✨ Polish</button>
+        <button type="button" id="goalPolishBtn" class="gm-polish"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.6 3.6 2 6 6 8-4 2-5.4 4.4-6 8-.6-3.6-2-6-6-8 4-2 5.4-4.4 6-8Z"/></svg>Polish</button>
         <div class="gm-status" id="polishStatus"></div>
       </div>
     </div>
@@ -688,7 +692,7 @@ body::after {
       <div class="goal-input-wrap gm-input-wrap">
         <input id="tomorrowInput" class="gm-input" type="text" placeholder="Add a goal for tomorrow…" autocomplete="off">
         <button type="button" id="tomorrowAddBtn"    class="gm-add">+ Add</button>
-        <button type="button" id="tomorrowPolishBtn" class="gm-polish">✨ Polish</button>
+        <button type="button" id="tomorrowPolishBtn" class="gm-polish"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.6 3.6 2 6 6 8-4 2-5.4 4.4-6 8-.6-3.6-2-6-6-8 4-2 5.4-4.4 6-8Z"/></svg>Polish</button>
         <div class="gm-status" id="tomorrowStatus"></div>
       </div>
     </div>
@@ -700,7 +704,7 @@ body::after {
 (function () {
   'use strict';
 
-  // ✨ Polish reuses the same NVIDIA key the Nova tile saves to localStorage.
+  // Polish reuses the same NVIDIA key the Nova tile saves to localStorage.
   // No key saved there yet = falls back to plain add.
   function nvidiaKey() { try { return localStorage.getItem('nova_lite_api_key') || ''; } catch (e) { return ''; } }
 
@@ -941,7 +945,7 @@ body::after {
       fillEl.style.stroke = '#4D4B47';
       percentEl.textContent = '—';
       phaseEl.textContent   = 'SLEEPING';
-      statusEl.textContent  = '😴 Still sleeping';
+      statusEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.5A9 9 0 1 1 11.5 3 7 7 0 0 0 21 12.5Z"/></svg>Still sleeping';
       const minsUntil = (WAKE_HOUR - hours) * 60;
       remainingEl.textContent = formatRemaining(minsUntil) + ' until wake-up';
       return;
@@ -952,7 +956,7 @@ body::after {
       fillEl.style.stroke = '#E25D7A';
       percentEl.textContent = '100%';
       phaseEl.textContent   = 'PAST BEDTIME';
-      statusEl.textContent  = '⚠️ Past bedtime';
+      statusEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 1 21h22L12 2Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>Past bedtime';
       remainingEl.textContent = 'Sleep!';
       return;
     }
@@ -963,14 +967,19 @@ body::after {
     fillEl.style.stroke = rgb(paletteAt(percent));
     percentEl.textContent = Math.floor(percent) + '%';
 
+    const ICON_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>';
+    const ICON_BOLT = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-2 8 11-13h-7l2-7Z"/></svg>';
+    const ICON_FLAME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>';
+    const ICON_HOURGLASS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h12M6 22h12M8 2c0 4 2 6 4 8 2-2 4-4 4-8M8 22c0-4 2-6 4-8 2 2 4 4 4 8"/></svg>';
+    const ICON_MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.5A9 9 0 1 1 11.5 3 7 7 0 0 0 21 12.5Z"/></svg>';
     let phase, status;
-    if (percent < 25)      { phase = 'MORNING';   status = '☀️ Morning — fresh start'; }
-    else if (percent < 50) { phase = 'MIDDAY';    status = '⚡ Midday — keep moving'; }
-    else if (percent < 75) { phase = 'AFTERNOON'; status = '🔥 Afternoon — push it'; }
-    else if (percent < 90) { phase = 'EVENING';   status = '⏳ Evening — wrap up'; }
-    else                   { phase = 'BEDTIME';   status = '🌙 Bedtime soon'; }
+    if (percent < 25)      { phase = 'MORNING';   status = ICON_SUN + 'Morning — fresh start'; }
+    else if (percent < 50) { phase = 'MIDDAY';    status = ICON_BOLT + 'Midday — keep moving'; }
+    else if (percent < 75) { phase = 'AFTERNOON'; status = ICON_FLAME + 'Afternoon — push it'; }
+    else if (percent < 90) { phase = 'EVENING';   status = ICON_HOURGLASS + 'Evening — wrap up'; }
+    else                   { phase = 'BEDTIME';   status = ICON_MOON + 'Bedtime soon'; }
     phaseEl.textContent  = phase;
-    statusEl.textContent = status;
+    statusEl.innerHTML = status;
 
     const minsLeft = (SLEEP_HOUR - hours) * 60;
     remainingEl.textContent = formatRemaining(minsLeft) + ' awake time left';
@@ -1074,7 +1083,7 @@ body::after {
     const queueBtn = document.createElement('button');
     queueBtn.type = 'button';
     queueBtn.className = 'gm-queue-btn' + (goal.queued ? ' gm-queue-active' : '');
-    queueBtn.textContent = '⚡';
+    queueBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-2 8 11-13h-7l2-7Z"/></svg>';
     queueBtn.title = 'Queue for productivity window';
     if (readOnly) queueBtn.disabled = true;
     queueBtn.addEventListener('click', () => {
