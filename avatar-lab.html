@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avatar Lab</title>
+<style>
+  :root{
+    --c1:#b9fbe8;
+    --c2:#2dd4bf;
+    --c3:#042f2e;
+    --s:72px;
+
+    --bg:#0a0c11;
+    --panel:#12151c;
+    --panel2:#161a23;
+    --border:#242938;
+    --text:#e6e8ec;
+    --muted:#8b93a3;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% -10%, rgba(45,212,191,.08), transparent 40%),
+      radial-gradient(circle at 110% 10%, rgba(168,85,247,.06), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:10;
+    background:rgba(10,12,17,.85);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid var(--border);
+    padding:14px 20px;
+  }
+  .topbar-inner{
+    max-width:1200px; margin:0 auto;
+    display:flex; flex-wrap:wrap; align-items:center; gap:18px;
+  }
+  .brand{
+    font-family:var(--mono);
+    font-weight:700;
+    letter-spacing:.12em;
+    font-size:14px;
+    color:var(--c2);
+    text-shadow:0 0 14px color-mix(in srgb, var(--c2) 60%, transparent);
+    white-space:nowrap;
+  }
+  .controls{ display:flex; flex-wrap:wrap; align-items:center; gap:18px; flex:1; }
+  .ctrl-group{
+    display:flex; align-items:center; gap:8px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:8px 10px;
+  }
+  .ctrl-group label{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    display:flex; align-items:center; gap:6px;
+  }
+  input[type="color"]{
+    width:26px; height:26px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    background:none;
+    padding:0;
+    cursor:pointer;
+  }
+  .palettes{ flex-wrap:wrap; gap:6px; }
+  .chip{
+    display:flex; align-items:center; gap:6px;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text);
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:5px 10px 5px 5px;
+    cursor:pointer;
+    transition: border-color .15s, transform .1s;
+  }
+  .chip:hover{ border-color: var(--c2); transform: translateY(-1px); }
+  .chip-swatch{
+    width:16px; height:16px;
+    border-radius:50%;
+    flex:none;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+  }
+  .state-toggle{ gap:2px; padding:4px; }
+  .seg{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    background:transparent;
+    border:none;
+    border-radius:8px;
+    padding:7px 12px;
+    cursor:pointer;
+    transition: background .15s, color .15s;
+  }
+  .seg:hover{ color:var(--text); }
+  .seg.active{
+    background: color-mix(in srgb, var(--c2) 22%, var(--panel2));
+    color:var(--text);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c2) 50%, transparent);
+  }
+  .size-ctrl input[type="range"]{
+    width:120px;
+    accent-color: var(--c2);
+  }
+  #sizeLabel{ color:var(--text); min-width:34px; display:inline-block; }
+
+  /* ---------- Grid ---------- */
+  .grid{
+    max-width:1200px;
+    margin:0 auto;
+    padding:32px 20px 60px;
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap:20px;
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:24px 18px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    transition: border-color .2s, transform .2s;
+  }
+  .card:hover{ border-color: color-mix(in srgb, var(--c2) 45%, var(--border)); transform: translateY(-2px); }
+  .avatar-stage{
+    width:140px; height:140px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card-label{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    color:var(--muted);
+  }
+  .use-btn{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text);
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:9px 14px;
+    cursor:pointer;
+    width:100%;
+    transition: background .15s, border-color .15s;
+  }
+  .use-btn:hover{
+    border-color: var(--c2);
+    background: color-mix(in srgb, var(--c2) 14%, var(--panel2));
+  }
+
+  /* ---------- Avatar base ---------- */
+  .avatar{
+    width:var(--s); height:var(--s);
+    position:relative;
+    transition: width .25s ease, height .25s ease;
+  }
+  .eye{
+    position:absolute;
+    width:calc(var(--s) * 0.1);
+    height:calc(var(--s) * 0.1);
+    background:#11131a;
+    border-radius:50%;
+    top:38%;
+    transition: height .2s ease, border-radius .2s ease, top .2s ease;
+  }
+  .eye-l{ left:29%; }
+  .eye-r{ left:61%; }
+  body[data-state="happy"] .eye{
+    height:calc(var(--s) * 0.05);
+    border-radius: calc(var(--s) * 0.1) calc(var(--s) * 0.1) 0 0;
+    top:41%;
+  }
+
+  /* ---------- Orb ---------- */
+  .avatar--orb{
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 28%, var(--c1), var(--c2) 55%, var(--c3) 100%);
+    box-shadow:
+      0 0 calc(var(--s) * 0.35) color-mix(in srgb, var(--c2) 65%, transparent),
+      inset 0 0 calc(var(--s) * 0.14) rgba(255,255,255,.35);
+    animation: orb-float 3.2s ease-in-out infinite;
+  }
+  @keyframes orb-float{
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(-8%); }
+  }
+  body[data-state="thinking"] .avatar--orb{ animation-duration: .9s; }
+  body[data-state="happy"] .avatar--orb{ animation-duration: 2s; }
+
+  /* ---------- Reactor ---------- */
+  .avatar--reactor{
+    border-radius:50%;
+    background: radial-gradient(circle, var(--c1), var(--c3) 72%);
+    box-shadow: 0 0 calc(var(--s) * 0.3) color-mix(in srgb, var(--c2) 55%, transparent);
+  }
+  .reactor-ring{
+    position:absolute; inset:-12%;
+    border-radius:50%;
+    background: conic-gradient(from 0deg, transparent 0%, var(--c2) 35%, transparent 65%);
+    animation: reactor-spin 4s linear infinite;
+    opacity:.9;
+  }
+  .reactor-ring.ring2{
+    inset:4%;
+    animation-duration: 3s;
+    animation-direction: reverse;
+    opacity:.55;
+  }
+  .reactor-core{
+    position:absolute; inset:32%;
+    border-radius:50%;
+    background: radial-gradient(circle, #fff, var(--c1) 45%, var(--c2) 100%);
+    box-shadow: 0 0 calc(var(--s) * 0.25) var(--c1);
+    animation: reactor-pulse 2s ease-in-out infinite;
+  }
+  @keyframes reactor-spin{ to{ transform: rotate(360deg); } }
+  @keyframes reactor-pulse{
+    0%,100%{ transform: scale(1); opacity:1; }
+    50%{ transform: scale(1.15); opacity:.85; }
+  }
+  body[data-state="thinking"] .reactor-ring{ animation-duration: 1s; }
+  body[data-state="thinking"] .reactor-ring.ring2{ animation-duration: .8s; }
+  body[data-state="thinking"] .reactor-core{ animation-duration: .55s; }
+  body[data-state="happy"] .reactor-core{ animation-duration: 1.2s; }
+
+  /* ---------- Blob ---------- */
+  .blob-shape{
+    width:100%; height:100%;
+    position:relative;
+    background: radial-gradient(circle at 35% 28%, var(--c1), var(--c2) 55%, var(--c3) 100%);
+    box-shadow: 0 0 calc(var(--s) * 0.3) color-mix(in srgb, var(--c2) 55%, transparent);
+    animation: blob-morph 5s ease-in-out infinite;
+  }
+  @keyframes blob-morph{
+    0%,100%{ border-radius: 42% 58% 64% 36% / 45% 45% 55% 55%; }
+    25%{ border-radius: 58% 42% 38% 62% / 60% 40% 60% 40%; }
+    50%{ border-radius: 50% 50% 38% 62% / 55% 62% 38% 45%; }
+    75%{ border-radius: 38% 62% 55% 45% / 42% 58% 42% 58%; }
+  }
+  body[data-state="thinking"] .blob-shape{ animation-duration: 1.5s; }
+  body[data-state="happy"] .blob-shape{ animation-duration: 4s; }
+
+  /* ---------- Bot ---------- */
+  .avatar--bot{
+    border-radius: 30% 30% 34% 34% / 38% 38% 32% 32%;
+    background: linear-gradient(160deg, var(--c1), var(--c2) 55%, var(--c3));
+    box-shadow: 0 0 calc(var(--s) * 0.25) color-mix(in srgb, var(--c2) 55%, transparent);
+    animation: bot-bob 3s ease-in-out infinite;
+  }
+  .bot-antenna{
+    position:absolute;
+    top:-18%; left:50%;
+    width:calc(var(--s) * 0.045);
+    height:20%;
+    background: var(--c2);
+    border-radius:4px;
+    transform: translateX(-50%);
+  }
+  .bot-antenna::after{
+    content:"";
+    position:absolute;
+    top:-38%; left:50%;
+    width:calc(var(--s) * 0.16);
+    height:calc(var(--s) * 0.16);
+    border-radius:50%;
+    background: radial-gradient(circle, #fff, var(--c1));
+    box-shadow: 0 0 calc(var(--s) * 0.2) var(--c2);
+    transform: translateX(-50%);
+    animation: antenna-pulse 1.8s ease-in-out infinite;
+  }
+  .bot-mouth{
+    position:absolute;
+    bottom:24%; left:50%;
+    width:28%; height:6%;
+    background:#11131a;
+    border-radius:6px;
+    transform: translateX(-50%);
+  }
+  .avatar--bot .eye{ animation: bot-blink 4.5s ease-in-out infinite; }
+  @keyframes bot-bob{
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(-5%); }
+  }
+  @keyframes antenna-pulse{
+    0%,100%{ opacity:1; transform: translateX(-50%) scale(1); }
+    50%{ opacity:.6; transform: translateX(-50%) scale(1.25); }
+  }
+  @keyframes bot-blink{
+    0%, 92%, 100%{ transform: scaleY(1); }
+    96%{ transform: scaleY(.1); }
+  }
+  body[data-state="thinking"] .avatar--bot{ animation-duration: 1.2s; }
+  body[data-state="thinking"] .bot-antenna::after{ animation-duration: .5s; }
+  body[data-state="thinking"] .avatar--bot .eye{ animation-duration: 1.6s; }
+  body[data-state="happy"] .avatar--bot{ animation-duration: 2.4s; }
+
+  /* ---------- Plasma ---------- */
+  .avatar--plasma{
+    border-radius:50%;
+    overflow:hidden;
+    background: var(--c3);
+    box-shadow:
+      0 0 calc(var(--s) * 0.3) color-mix(in srgb, var(--c2) 55%, transparent),
+      inset 0 0 calc(var(--s) * 0.16) rgba(255,255,255,.2);
+  }
+  .plasma-fill{
+    position:absolute; inset:-35%;
+    background: conic-gradient(from 0deg, var(--c1), var(--c2), var(--c3), var(--c2), var(--c1));
+    filter: blur(calc(var(--s) * 0.09));
+    animation: plasma-spin 6s linear infinite;
+  }
+  .plasma-glass{
+    position:absolute; inset:0;
+    border-radius:50%;
+    background: linear-gradient(160deg, rgba(255,255,255,.35), rgba(255,255,255,0) 45%);
+    border:1px solid rgba(255,255,255,.22);
+  }
+  @keyframes plasma-spin{ to{ transform: rotate(360deg); } }
+  body[data-state="thinking"] .plasma-fill{ animation-duration: 1.1s; }
+  body[data-state="happy"] .plasma-fill{ animation-duration: 3s; }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;
+    bottom:24px; left:50%;
+    transform: translate(-50%, 20px);
+    background:var(--panel2);
+    border:1px solid var(--c2);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:12px;
+    padding:10px 18px;
+    border-radius:10px;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .2s ease, transform .2s ease;
+    box-shadow: 0 0 20px color-mix(in srgb, var(--c2) 40%, transparent);
+    z-index:50;
+  }
+  .toast.show{
+    opacity:1;
+    transform: translate(-50%, 0);
+  }
+
+  footer{
+    text-align:center;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    padding:10px 20px 30px;
+  }
+</style>
+</head>
+<body data-state="idle">
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">AVATAR LAB</div>
+      <div class="controls">
+        <div class="ctrl-group colors">
+          <label>Light <input type="color" id="c1" value="#b9fbe8"></label>
+          <label>Glow <input type="color" id="c2" value="#2dd4bf"></label>
+          <label>Deep <input type="color" id="c3" value="#042f2e"></label>
+        </div>
+
+        <div class="ctrl-group palettes" id="palettes"></div>
+
+        <div class="ctrl-group state-toggle" id="stateToggle">
+          <button class="seg active" data-state="idle">Idle</button>
+          <button class="seg" data-state="thinking">Thinking</button>
+          <button class="seg" data-state="happy">Happy</button>
+        </div>
+
+        <div class="ctrl-group size-ctrl">
+          <label>Size <span id="sizeLabel">72px</span></label>
+          <input type="range" id="size" min="44" max="120" value="72">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid" id="grid">
+
+    <section class="card" data-design="orb">
+      <div class="avatar-stage">
+        <div class="avatar avatar--orb">
+          <span class="eye eye-l"></span>
+          <span class="eye eye-r"></span>
+        </div>
+      </div>
+      <div class="card-label">ORB</div>
+      <button class="use-btn" data-design="orb">Use in Nova</button>
+    </section>
+
+    <section class="card" data-design="reactor">
+      <div class="avatar-stage">
+        <div class="avatar avatar--reactor">
+          <div class="reactor-ring ring1"></div>
+          <div class="reactor-ring ring2"></div>
+          <div class="reactor-core"></div>
+        </div>
+      </div>
+      <div class="card-label">REACTOR</div>
+      <button class="use-btn" data-design="reactor">Use in Nova</button>
+    </section>
+
+    <section class="card" data-design="blob">
+      <div class="avatar-stage">
+        <div class="avatar avatar--blob">
+          <div class="blob-shape">
+            <span class="eye eye-l"></span>
+            <span class="eye eye-r"></span>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">BLOB</div>
+      <button class="use-btn" data-design="blob">Use in Nova</button>
+    </section>
+
+    <section class="card" data-design="bot">
+      <div class="avatar-stage">
+        <div class="avatar avatar--bot">
+          <span class="bot-antenna"></span>
+          <span class="eye eye-l"></span>
+          <span class="eye eye-r"></span>
+          <span class="bot-mouth"></span>
+        </div>
+      </div>
+      <div class="card-label">BOT</div>
+      <button class="use-btn" data-design="bot">Use in Nova</button>
+    </section>
+
+    <section class="card" data-design="plasma">
+      <div class="avatar-stage">
+        <div class="avatar avatar--plasma">
+          <div class="plasma-fill"></div>
+          <div class="plasma-glass"></div>
+        </div>
+      </div>
+      <div class="card-label">PLASMA</div>
+      <button class="use-btn" data-design="plasma">Use in Nova</button>
+    </section>
+
+  </main>
+
+  <footer>local · no dependencies · pure CSS</footer>
+
+  <div class="toast" id="toast">Copied!</div>
+
+<script>
+(function(){
+  const root = document.documentElement;
+  const body = document.body;
+
+  /* ---------------- Palettes ---------------- */
+  const PALETTES = [
+    { name:"Mint",     c1:"#b9fbe8", c2:"#2dd4bf", c3:"#042f2e" },
+    { name:"Violet",   c1:"#e9d5ff", c2:"#a855f7", c3:"#2e1065" },
+    { name:"Sunset",   c1:"#ffd9a0", c2:"#fb7185", c3:"#4a0d2e" },
+    { name:"Ocean",    c1:"#bae6fd", c2:"#0ea5e9", c3:"#082f49" },
+    { name:"Gold",     c1:"#fff3c4", c2:"#f5b942", c3:"#4a3503" },
+    { name:"Emerald",  c1:"#bbf7d0", c2:"#16a34a", c3:"#052e16" },
+    { name:"Graphite", c1:"#e5e7eb", c2:"#6b7280", c3:"#111827" },
+    { name:"Crimson",  c1:"#fecdd3", c2:"#e11d48", c3:"#450a0a" },
+  ];
+
+  const palettesEl = document.getElementById("palettes");
+  PALETTES.forEach(p => {
+    const chip = document.createElement("button");
+    chip.className = "chip";
+    chip.dataset.c1 = p.c1; chip.dataset.c2 = p.c2; chip.dataset.c3 = p.c3;
+    chip.innerHTML = `<span class="chip-swatch" style="background:linear-gradient(135deg, ${p.c1}, ${p.c2}, ${p.c3})"></span>${p.name}`;
+    chip.addEventListener("click", () => setColors(p.c1, p.c2, p.c3));
+    palettesEl.appendChild(chip);
+  });
+
+  /* ---------------- Color inputs ---------------- */
+  const c1Input = document.getElementById("c1");
+  const c2Input = document.getElementById("c2");
+  const c3Input = document.getElementById("c3");
+
+  function setColors(c1, c2, c3){
+    root.style.setProperty("--c1", c1);
+    root.style.setProperty("--c2", c2);
+    root.style.setProperty("--c3", c3);
+    c1Input.value = c1; c2Input.value = c2; c3Input.value = c3;
+  }
+
+  c1Input.addEventListener("input", e => root.style.setProperty("--c1", e.target.value));
+  c2Input.addEventListener("input", e => root.style.setProperty("--c2", e.target.value));
+  c3Input.addEventListener("input", e => root.style.setProperty("--c3", e.target.value));
+
+  /* ---------------- State toggle ---------------- */
+  const stateToggle = document.getElementById("stateToggle");
+  stateToggle.addEventListener("click", e => {
+    const btn = e.target.closest(".seg");
+    if(!btn) return;
+    stateToggle.querySelectorAll(".seg").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    body.setAttribute("data-state", btn.dataset.state);
+  });
+
+  /* ---------------- Size slider ---------------- */
+  const sizeInput = document.getElementById("size");
+  const sizeLabel = document.getElementById("sizeLabel");
+  sizeInput.addEventListener("input", e => {
+    const v = e.target.value;
+    root.style.setProperty("--s", v + "px");
+    sizeLabel.textContent = v + "px";
+  });
+
+  /* ---------------- Copy snippet ---------------- */
+  const toast = document.getElementById("toast");
+  let toastTimer = null;
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+  }
+
+  function currentColors(){
+    return {
+      c1: c1Input.value,
+      c2: c2Input.value,
+      c3: c3Input.value,
+      s: sizeInput.value + "px",
+    };
+  }
+
+  const SNIPPETS = {
+    orb: ({c1,c2,c3,s}) => `<!-- Nova Avatar: Orb -->
+<style>
+  :root{
+    --c1:${c1};
+    --c2:${c2};
+    --c3:${c3};
+    --s:${s};
+  }
+  .nova-avatar{ width:var(--s); height:var(--s); position:relative; transition:width .25s ease, height .25s ease; }
+  .nova-eye{ position:absolute; width:calc(var(--s) * 0.1); height:calc(var(--s) * 0.1); background:#11131a; border-radius:50%; top:38%; transition:height .2s ease, border-radius .2s ease, top .2s ease; }
+  .nova-eye-l{ left:29%; }
+  .nova-eye-r{ left:61%; }
+  body[data-state="happy"] .nova-eye{ height:calc(var(--s) * 0.05); border-radius:calc(var(--s) * 0.1) calc(var(--s) * 0.1) 0 0; top:41%; }
+
+  .nova-avatar--orb{
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 28%, var(--c1), var(--c2) 55%, var(--c3) 100%);
+    box-shadow:
+      0 0 calc(var(--s) * 0.35) color-mix(in srgb, var(--c2) 65%, transparent),
+      inset 0 0 calc(var(--s) * 0.14) rgba(255,255,255,.35);
+    animation: nova-orb-float 3.2s ease-in-out infinite;
+  }
+  @keyframes nova-orb-float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8%); } }
+  body[data-state="thinking"] .nova-avatar--orb{ animation-duration:.9s; }
+  body[data-state="happy"] .nova-avatar--orb{ animation-duration:2s; }
+</style>
+
+<div class="nova-avatar nova-avatar--orb">
+  <span class="nova-eye nova-eye-l"></span>
+  <span class="nova-eye nova-eye-r"></span>
+</div>`,
+
+    reactor: ({c1,c2,c3,s}) => `<!-- Nova Avatar: Reactor -->
+<style>
+  :root{
+    --c1:${c1};
+    --c2:${c2};
+    --c3:${c3};
+    --s:${s};
+  }
+  .nova-avatar{ width:var(--s); height:var(--s); position:relative; transition:width .25s ease, height .25s ease; }
+
+  .nova-avatar--reactor{
+    border-radius:50%;
+    background: radial-gradient(circle, var(--c1), var(--c3) 72%);
+    box-shadow: 0 0 calc(var(--s) * 0.3) color-mix(in srgb, var(--c2) 55%, transparent);
+  }
+  .nova-reactor-ring{
+    position:absolute; inset:-12%;
+    border-radius:50%;
+    background: conic-gradient(from 0deg, transparent 0%, var(--c2) 35%, transparent 65%);
+    animation: nova-reactor-spin 4s linear infinite;
+    opacity:.9;
+  }
+  .nova-reactor-ring.ring2{ inset:4%; animation-duration:3s; animation-direction:reverse; opacity:.55; }
+  .nova-reactor-core{
+    position:absolute; inset:32%;
+    border-radius:50%;
+    background: radial-gradient(circle, #fff, var(--c1) 45%, var(--c2) 100%);
+    box-shadow: 0 0 calc(var(--s) * 0.25) var(--c1);
+    animation: nova-reactor-pulse 2s ease-in-out infinite;
+  }
+  @keyframes nova-reactor-spin{ to{ transform:rotate(360deg); } }
+  @keyframes nova-reactor-pulse{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.15); opacity:.85; } }
+  body[data-state="thinking"] .nova-reactor-ring{ animation-duration:1s; }
+  body[data-state="thinking"] .nova-reactor-ring.ring2{ animation-duration:.8s; }
+  body[data-state="thinking"] .nova-reactor-core{ animation-duration:.55s; }
+  body[data-state="happy"] .nova-reactor-core{ animation-duration:1.2s; }
+</style>
+
+<div class="nova-avatar nova-avatar--reactor">
+  <div class="nova-reactor-ring ring1"></div>
+  <div class="nova-reactor-ring ring2"></div>
+  <div class="nova-reactor-core"></div>
+</div>`,
+
+    blob: ({c1,c2,c3,s}) => `<!-- Nova Avatar: Blob -->
+<style>
+  :root{
+    --c1:${c1};
+    --c2:${c2};
+    --c3:${c3};
+    --s:${s};
+  }
+  .nova-avatar{ width:var(--s); height:var(--s); position:relative; transition:width .25s ease, height .25s ease; }
+  .nova-eye{ position:absolute; width:calc(var(--s) * 0.1); height:calc(var(--s) * 0.1); background:#11131a; border-radius:50%; top:38%; transition:height .2s ease, border-radius .2s ease, top .2s ease; }
+  .nova-eye-l{ left:29%; }
+  .nova-eye-r{ left:61%; }
+  body[data-state="happy"] .nova-eye{ height:calc(var(--s) * 0.05); border-radius:calc(var(--s) * 0.1) calc(var(--s) * 0.1) 0 0; top:41%; }
+
+  .nova-blob-shape{
+    width:100%; height:100%;
+    position:relative;
+    background: radial-gradient(circle at 35% 28%, var(--c1), var(--c2) 55%, var(--c3) 100%);
+    box-shadow: 0 0 calc(var(--s) * 0.3) color-mix(in srgb, var(--c2) 55%, transparent);
+    animation: nova-blob-morph 5s ease-in-out infinite;
+  }
+  @keyframes nova-blob-morph{
+    0%,100%{ border-radius:42% 58% 64% 36% / 45% 45% 55% 55%; }
+    25%{ border-radius:58% 42% 38% 62% / 60% 40% 60% 40%; }
+    50%{ border-radius:50% 50% 38% 62% / 55% 62% 38% 45%; }
+    75%{ border-radius:38% 62% 55% 45% / 42% 58% 42% 58%; }
+  }
+  body[data-state="thinking"] .nova-blob-shape{ animation-duration:1.5s; }
+  body[data-state="happy"] .nova-blob-shape{ animation-duration:4s; }
+</style>
+
+<div class="nova-avatar nova-avatar--blob">
+  <div class="nova-blob-shape">
+    <span class="nova-eye nova-eye-l"></span>
+    <span class="nova-eye nova-eye-r"></span>
+  </div>
+</div>`,
+
+    bot: ({c1,c2,c3,s}) => `<!-- Nova Avatar: Bot -->
+<style>
+  :root{
+    --c1:${c1};
+    --c2:${c2};
+    --c3:${c3};
+    --s:${s};
+  }
+  .nova-avatar{ width:var(--s); height:var(--s); position:relative; transition:width .25s ease, height .25s ease; }
+  .nova-eye{ position:absolute; width:calc(var(--s) * 0.1); height:calc(var(--s) * 0.1); background:#11131a; border-radius:50%; top:38%; transition:height .2s ease, border-radius .2s ease, top .2s ease; }
+  .nova-eye-l{ left:29%; }
+  .nova-eye-r{ left:61%; }
+  body[data-state="happy"] .nova-eye{ height:calc(var(--s) * 0.05); border-radius:calc(var(--s) * 0.1) calc(var(--s) * 0.1) 0 0; top:41%; }
+
+  .nova-avatar--bot{
+    border-radius:30% 30% 34% 34% / 38% 38% 32% 32%;
+    background: linear-gradient(160deg, var(--c1), var(--c2) 55%, var(--c3));
+    box-shadow: 0 0 calc(var(--s) * 0.25) color-mix(in srgb, var(--c2) 55%, transparent);
+    animation: nova-bot-bob 3s ease-in-out infinite;
+  }
+  .nova-bot-antenna{
+    position:absolute; top:-18%; left:50%;
+    width:calc(var(--s) * 0.045); height:20%;
+    background:var(--c2); border-radius:4px;
+    transform:translateX(-50%);
+  }
+  .nova-bot-antenna::after{
+    content:"";
+    position:absolute; top:-38%; left:50%;
+    width:calc(var(--s) * 0.16); height:calc(var(--s) * 0.16);
+    border-radius:50%;
+    background: radial-gradient(circle, #fff, var(--c1));
+    box-shadow: 0 0 calc(var(--s) * 0.2) var(--c2);
+    transform:translateX(-50%);
+    animation: nova-antenna-pulse 1.8s ease-in-out infinite;
+  }
+  .nova-bot-mouth{
+    position:absolute; bottom:24%; left:50%;
+    width:28%; height:6%;
+    background:#11131a; border-radius:6px;
+    transform:translateX(-50%);
+  }
+  .nova-avatar--bot .nova-eye{ animation: nova-bot-blink 4.5s ease-in-out infinite; }
+  @keyframes nova-bot-bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5%); } }
+  @keyframes nova-antenna-pulse{ 0%,100%{ opacity:1; transform:translateX(-50%) scale(1); } 50%{ opacity:.6; transform:translateX(-50%) scale(1.25); } }
+  @keyframes nova-bot-blink{ 0%, 92%, 100%{ transform:scaleY(1); } 96%{ transform:scaleY(.1); } }
+  body[data-state="thinking"] .nova-avatar--bot{ animation-duration:1.2s; }
+  body[data-state="thinking"] .nova-bot-antenna::after{ animation-duration:.5s; }
+  body[data-state="thinking"] .nova-avatar--bot .nova-eye{ animation-duration:1.6s; }
+  body[data-state="happy"] .nova-avatar--bot{ animation-duration:2.4s; }
+</style>
+
+<div class="nova-avatar nova-avatar--bot">
+  <span class="nova-bot-antenna"></span>
+  <span class="nova-eye nova-eye-l"></span>
+  <span class="nova-eye nova-eye-r"></span>
+  <span class="nova-bot-mouth"></span>
+</div>`,
+
+    plasma: ({c1,c2,c3,s}) => `<!-- Nova Avatar: Plasma -->
+<style>
+  :root{
+    --c1:${c1};
+    --c2:${c2};
+    --c3:${c3};
+    --s:${s};
+  }
+  .nova-avatar{ width:var(--s); height:var(--s); position:relative; transition:width .25s ease, height .25s ease; }
+
+  .nova-avatar--plasma{
+    border-radius:50%;
+    overflow:hidden;
+    background: var(--c3);
+    box-shadow:
+      0 0 calc(var(--s) * 0.3) color-mix(in srgb, var(--c2) 55%, transparent),
+      inset 0 0 calc(var(--s) * 0.16) rgba(255,255,255,.2);
+  }
+  .nova-plasma-fill{
+    position:absolute; inset:-35%;
+    background: conic-gradient(from 0deg, var(--c1), var(--c2), var(--c3), var(--c2), var(--c1));
+    filter: blur(calc(var(--s) * 0.09));
+    animation: nova-plasma-spin 6s linear infinite;
+  }
+  .nova-plasma-glass{
+    position:absolute; inset:0;
+    border-radius:50%;
+    background: linear-gradient(160deg, rgba(255,255,255,.35), rgba(255,255,255,0) 45%);
+    border:1px solid rgba(255,255,255,.22);
+  }
+  @keyframes nova-plasma-spin{ to{ transform:rotate(360deg); } }
+  body[data-state="thinking"] .nova-plasma-fill{ animation-duration:1.1s; }
+  body[data-state="happy"] .nova-plasma-fill{ animation-duration:3s; }
+</style>
+
+<div class="nova-avatar nova-avatar--plasma">
+  <div class="nova-plasma-fill"></div>
+  <div class="nova-plasma-glass"></div>
+</div>`,
+  };
+
+  function fallbackCopy(text){
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  document.getElementById("grid").addEventListener("click", e => {
+    const btn = e.target.closest(".use-btn");
+    if(!btn) return;
+    const design = btn.dataset.design;
+    const text = SNIPPETS[design](currentColors());
+
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text)
+        .then(() => showToast(`${design[0].toUpperCase()}${design.slice(1)} copied to clipboard`))
+        .catch(() => { fallbackCopy(text); showToast(`${design[0].toUpperCase()}${design.slice(1)} copied to clipboard`); });
+    } else {
+      fallbackCopy(text);
+      showToast(`${design[0].toUpperCase()}${design.slice(1)} copied to clipboard`);
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
