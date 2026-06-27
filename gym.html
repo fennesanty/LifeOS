@@ -3660,14 +3660,14 @@ img, video, canvas, svg { max-width: 100%; }
     busy = true; fab.classList.add('think');
     const loading = addMsg('coach', '<span class="nv-dots"><i></i><i></i><i></i></span>');
     try {
-      const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+      const res = await fetch('/api/nova-proxy', {
         method: 'POST',
-        headers: { 'content-type':'application/json', 'authorization':'Bearer ' + key },
-        body: JSON.stringify({ model:'moonshotai/kimi-k2.6', max_tokens:1024, messages:[{role:'system', content: SYS + gymContext()}, {role:'user', content:text}] }),
+        headers: { 'content-type':'application/json' },
+        body: JSON.stringify({ key, messages:[{role:'system', content: SYS + gymContext()}, {role:'user', content:text}] }),
       });
       const json = await res.json();
       if (json.error){ loading.innerHTML = md('- ' + (json.error.message || 'Something went wrong — check your API key.')); fab.classList.remove('think'); busy=false; return; }
-      const reply = (json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content) || 'Hmm, no reply.';
+      const reply = json.text || 'Hmm, no reply.';
       loading.innerHTML = md(reply);
       fab.classList.remove('think'); fab.classList.add('happy');
       setTimeout(() => fab.classList.remove('happy'), 2500);

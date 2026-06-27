@@ -187,15 +187,11 @@ body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: 
     setOrb('think');
     const loading = addCoach('<span class="dots"><i></i><i></i><i></i></span>');
     try {
-      const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+      const res = await fetch('/api/nova-proxy', {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'authorization': 'Bearer ' + key,
-        },
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          model: 'moonshotai/kimi-k2.6',
-          max_tokens: 1024,
+          key,
           messages: [
             { role: 'system', content: SYS + JSON.stringify(dashboardData()) },
             { role: 'user', content: text },
@@ -204,7 +200,7 @@ body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: 
       });
       const json = await res.json();
       if (json.error){ loading.querySelector('div:last-child').innerHTML = render('- ' + (json.error.message || 'Something went wrong — check your API key.')); setOrb(''); busy = false; return; }
-      const reply = (json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content) || 'Hmm, no reply.';
+      const reply = json.text || 'Hmm, no reply.';
       loading.querySelector('div:last-child').innerHTML = render(reply);
       setOrb('happy'); setTimeout(() => setOrb(''), 2500);
     } catch(e){
