@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Nova Lite · AI Mentor</title>
 <link rel="stylesheet" href="theme.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 <!-- ============================================================
  * NOVA LITE — a simple, drop-in AI mentor for ANY dashboard.
  * Single self-contained file. No backend, no build step.
@@ -16,15 +24,15 @@
  *   • Calls NVIDIA's OpenAI-compatible NIM API (moonshotai/kimi-k2.6)
  *     directly from the browser.
  *
- * This is the lightweight version: a flat CSS orb (no 3D), basic chat.
+ * This is the lightweight version: the shared crystal avatar, basic chat.
  * The premium build (3D avatar, Spark voice scheduler, secure server
  * proxy, palettes) is the paid Patreon episode.
  * ============================================================ -->
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --accent: #6EE7B7; --accent-2: #67E8F9; --bg: #05060c; --fg: #e9ecf5; --muted: rgba(233,236,245,.55); --line: rgba(255,255,255,.1); }
+:root { --accent: #7CEFB9; --accent-2: #67E8F9; --bg: #0A1410; --fg: #EAEFEA; --muted: rgba(159,179,169,.75); --line: rgba(124,239,185,.16); }
 html, body { background: var(--bg); }
-body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: var(--fg); min-height: 100vh; }
+body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif; color: var(--fg); min-height: 100vh; }
 
 .wrap { max-width: 560px; margin: 0 auto; padding: 28px 18px 60px; }
 .top { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
@@ -36,22 +44,14 @@ body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: 
 .keypanel { display: none; }
 .keypanel.open { display: block; }
 
-/* ---- flat CSS orb avatar (lightweight, no Three.js) ---- */
+/* ---- crystal avatar host (mounted by nova-avatar.js) ---- */
 .orb { width: 60px; height: 60px; border-radius: 50%; position: relative; flex-shrink: 0;
-  background: radial-gradient(circle at 32% 28%, #eafff6, var(--accent) 42%, #1f8f66 100%);
-  box-shadow: 0 0 22px -2px var(--accent), inset 0 -6px 14px rgba(0,0,0,.25);
-  animation: orbFloat 4s ease-in-out infinite; }
-.orb::before, .orb::after { content: ''; position: absolute; top: 38%; width: 9px; height: 9px; border-radius: 50%;
-  background: #06281d; box-shadow: 0 0 6px rgba(0,0,0,.4); transition: height .15s; }
-.orb::before { left: 30%; } .orb::after { right: 30%; }
-.orb.think { animation: orbFloat 1.1s ease-in-out infinite, orbPulse 1.1s ease-in-out infinite; }
-.orb.happy::before, .orb.happy::after { height: 4px; border-radius: 0 0 9px 9px; }
-@keyframes orbFloat { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
-@keyframes orbPulse { 0%,100% { box-shadow: 0 0 22px -2px var(--accent) } 50% { box-shadow: 0 0 34px 2px var(--accent) } }
+  background: radial-gradient(circle at 50% 48%, #16291F 0%, rgba(18,35,28,0.45) 42%, rgba(10,20,16,0) 72%);
+  overflow: hidden; }
 
-.title h1 { font-family: 'Times New Roman', Georgia, serif; font-style: italic; font-size: 26px; font-weight: 500;
+.title h1 { font-family: 'Newsreader', Georgia, serif; font-style: italic; font-size: 26px; font-weight: 500;
   background: linear-gradient(90deg, var(--accent-2), var(--accent)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.title .role { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+.title .role { font-family: 'Space Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
 
 /* ---- key setup ---- */
 .keybar { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -127,7 +127,8 @@ body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: 
   keyToggle.addEventListener('click', () => keypanel.classList.toggle('open'));
 
   function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-  function setOrb(s){ orb.className = 'orb' + (s ? ' ' + s : ''); }
+  const ORB_STATE_MAP = { '': 'idle', think: 'thinking', happy: 'positive' };
+  function setOrb(s){ if (window.novaAvatar) window.novaAvatar.go(ORB_STATE_MAP[s || ''] || 'idle'); }
 
   // ---- key handling ----
   function savedKey(){ try { return localStorage.getItem(KEY_LS) || ''; } catch(e){ return ''; } }
@@ -216,6 +217,12 @@ body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: 
 
   addCoach('Hey — I am <b>Nova</b>. Paste your key above, then ask me about food, training, sleep, or where to start. I keep it short and give you <b>one thing to act on</b>.');
 })();
+</script>
+
+<script type="module">
+import { NovaAvatar } from './nova-avatar.js';
+const orbHost = document.getElementById('orb');
+if (orbHost) window.novaAvatar = new NovaAvatar(orbHost);
 </script>
 </body>
 </html>

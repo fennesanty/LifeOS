@@ -6,27 +6,27 @@
 <link rel="stylesheet" href="theme.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#050506">
+<meta name="theme-color" content="#0A1410">
 <title>Fenne's Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="sync.js" defer></script>
 <script src="topbar.js" defer></script>
 <style>
 :root {
-  --text-primary: #FAFAFA;
-  --text-secondary: #B8B6B0;
-  --text-tertiary: #76746E;
-  --success: #6BE3A4;
+  --text-primary: #EAEFEA;
+  --text-secondary: #9fb3a9;
+  --text-tertiary: #6E827A;
+  --success: #7CEFB9;
   --warning: #F2C063;
   --danger: #FF6B6B;
-  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0;
-  background: #050506;
+  background: #0A1410;
   color: var(--text-secondary);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
@@ -43,8 +43,8 @@ body::before {
   content: '';
   position: fixed; inset: 0;
   background:
-    radial-gradient(circle at 82% 14%, rgba(224, 118, 88, 0.16), transparent 45%),
-    radial-gradient(circle at 18% 90%, rgba(180, 180, 200, 0.06), transparent 50%);
+    radial-gradient(circle at 82% 14%, rgba(124, 239, 185, 0.14), transparent 45%),
+    radial-gradient(circle at 18% 90%, rgba(124, 239, 185, 0.06), transparent 50%);
   filter: blur(40px);
   pointer-events: none;
   z-index: -2;
@@ -53,7 +53,7 @@ body::before {
 body::after {
   content: '';
   position: fixed; inset: 0;
-  background-image: radial-gradient(rgba(255,255,255,0.014) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(124,239,185,0.02) 1px, transparent 1px);
   background-size: 3px 3px;
   pointer-events: none;
   z-index: -1;
