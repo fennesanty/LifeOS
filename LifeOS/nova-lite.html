@@ -45,7 +45,8 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
 .keypanel.open { display: block; }
 
 /* ---- crystal avatar host (mounted by nova-avatar.js) ---- */
-.orb { width: 60px; height: 60px; border-radius: 50%; position: relative; flex-shrink: 0;
+.orb-wrap { display: flex; justify-content: center; margin-bottom: 22px; }
+.orb { width: 100%; max-width: 280px; aspect-ratio: 1/1; border-radius: 20px; position: relative;
   background: radial-gradient(circle at 50% 48%, #16291F 0%, rgba(18,35,28,0.45) 42%, rgba(10,20,16,0) 72%);
   overflow: hidden; }
 
@@ -90,10 +91,10 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
   <div class="wrap">
     <div class="top">
       <a class="back-btn" href="index.html" aria-label="Back to dashboard" title="Back to dashboard">←</a>
-      <div class="orb" id="orb"></div>
       <div class="title"><h1>Nova Lite</h1><div class="role">your mentor</div></div>
       <button id="keyToggle" class="key-toggle" aria-label="API key settings" title="API key"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-9.6 9.6"/><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><circle cx="7.5" cy="15.5" r="5.5"/></svg></button>
     </div>
+    <div class="orb-wrap"><div class="orb" id="orb"></div></div>
 
     <div class="keypanel" id="keypanel">
       <div class="keybar">
