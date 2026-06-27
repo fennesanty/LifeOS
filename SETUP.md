@@ -100,9 +100,16 @@ Replace the old URL/key in these files:
 
 ## 4. Nova (AI mentor / gym coach) — optional
 
-No setup or key in the repo. Each user **pastes their own Anthropic API key** on the
-**Nova** tile; it's stored only in their browser and sent straight to Anthropic. Get a key at
-console.anthropic.com.
+Runs on NVIDIA's NIM API (model `moonshotai/kimi-k2.6`). Each user **pastes their own
+NVIDIA API key** on the **Nova** tile and the gym coach; it's stored only in their browser
+and sent straight to NVIDIA. Get a key at build.nvidia.com/moonshotai/kimi-k2.6.
+
+The Finance page's Nova chat is separate: it calls `/api/nova` server-side, so add this in
+Vercel → **Settings → Environment Variables**, then redeploy:
+
+| Variable | Value |
+|---|---|
+| `NVIDIA_API_KEY` | your NVIDIA NIM API key |
 
 ---
 
