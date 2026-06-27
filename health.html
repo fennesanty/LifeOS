@@ -3,6 +3,7 @@
 <head>
 <script src="lock.js"></script>
 <script src="/api/config"></script>
+<link rel="stylesheet" href="theme.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#050506">
@@ -540,6 +541,9 @@ main {
     .wh-refresh.spin { transform:rotate(360deg); }
     /* Ring */
     .wh-ring-wrap { position:relative; width:240px; max-width:78%; margin:0 auto 24px; aspect-ratio:1; }
+    .wh-trend { position:absolute; top:6px; right:0; display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+    .wh-trend-label { font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary); }
+    .wh-trend-svg { width:64px; height:22px; }
     .wh-ring { width:100%; height:100%; transform:rotate(-90deg); filter:drop-shadow(0 0 24px rgba(255,255,255,0.05)); }
     .wh-ring-track { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:12; }
     .wh-ring-fill { fill:none; stroke:#FFF; stroke-width:12; stroke-linecap:round; stroke-dasharray:603.19; stroke-dashoffset:603.19; transition:stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1), stroke 0.4s; }
@@ -564,11 +568,20 @@ main {
     .wh-leg-dot.d-rem{background:#FFF} .wh-leg-dot.d-deep{background:#B8B6B0} .wh-leg-dot.d-light{background:#76746E} .wh-leg-dot.d-awake{background:#38362F; border:1px solid rgba(255,255,255,0.10);}
     .wh-leg-num { margin-left:auto; color:var(--text-primary); font-weight:700; font-family:var(--font-mono); font-size:11px; }
     @media (max-width:480px) { .wh-stages-legend { grid-template-columns:repeat(2,1fr); } }
+    .wh-debt { margin-bottom:22px; padding-top:22px; border-top:1px solid rgba(255,255,255,0.05); }
+    .wh-debt-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+    .wh-debt-meta { font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono); }
+    .wh-debt-bars { display:flex; align-items:flex-end; gap:6px; height:64px; }
+    .wh-debt-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; }
+    .wh-debt-bar-track { flex:1; width:100%; display:flex; align-items:flex-end; justify-content:center; }
+    .wh-debt-bar { width:60%; min-height:2px; border-radius:3px 3px 0 0; background:var(--good); transition:height 0.5s cubic-bezier(0.22,1,0.36,1); }
+    .wh-debt-bar.is-debt { background:var(--bad); }
+    .wh-debt-day { font-size:9px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; }
     /* Stats */
     .wh-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding-top:22px; border-top:1px solid rgba(255,255,255,0.05); }
     .wh-stat { position:relative; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.04); border-radius:12px; padding:12px 10px; text-align:center; }
     .wh-stat-label { font-size:10px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.14em; font-weight:700; margin-bottom:8px; }
-    .wh-stat-val { font-size:22px; font-weight:700; color:var(--text-primary); line-height:1; font-variant-numeric:tabular-nums; letter-spacing:-0.03em; }
+    .wh-stat-val { font-family:var(--font-display); font-size:24px; font-weight:700; color:var(--text-primary); line-height:1; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; }
     .wh-stat-sub { font-size:10px; color:var(--text-tertiary); margin-top:5px; font-family:var(--font-mono); }
     @media (max-width:480px) { .wh-stats { grid-template-columns:repeat(2,1fr); } .wh-stat-val { font-size:20px; } }
     /* Biomarkers */
@@ -597,6 +610,10 @@ main {
     .wh-verdict-badge.red    { color:#FF8A8A; border-color:rgba(255,138,138,0.50); background:rgba(255,138,138,0.10); }
     .wh-verdict-headline { font-size:15px; font-weight:600; color:var(--text-primary); line-height:1.4; margin-bottom:12px; }
     .wh-verdict-reasons { font-size:12.5px; color:var(--text-secondary); line-height:1.65; }
+    .wh-reason-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+    .wh-reason-item { position:relative; padding-left:20px; }
+    .wh-reason-item::before { content:'✦'; position:absolute; left:0; top:0; color:var(--good); font-size:11px; }
+    .wh-reason-item b { color:var(--text-primary); }
     /* Disconnect */
     .wh-disconnect-link { display:block; margin:16px auto 0; padding:6px 14px; background:transparent; border:none; color:var(--text-tertiary); font-family:inherit; font-size:11px; text-align:center; cursor:pointer; letter-spacing:0.04em; }
     .wh-disconnect-link:hover { color:var(--text-secondary); text-decoration:underline; }
@@ -621,6 +638,10 @@ main {
         </div>
         <div id="whErr" class="wh-err" style="display:none"></div>
         <div class="wh-ring-wrap">
+          <div class="wh-trend" id="whTrend" style="display:none">
+            <span class="wh-trend-label">2-day trend</span>
+            <svg class="wh-trend-svg" id="whTrendSvg" viewBox="0 0 80 28" preserveAspectRatio="none"></svg>
+          </div>
           <svg class="wh-ring" viewBox="0 0 220 220" aria-hidden="true">
             <circle class="wh-ring-track" cx="110" cy="110" r="96"/>
             <circle class="wh-ring-fill" cx="110" cy="110" r="96" id="whRingFill"/>
@@ -662,6 +683,10 @@ main {
           <span class="wh-leg-item"><span class="wh-zone z-norm"></span>Normal</span>
           <span class="wh-leg-item"><span class="wh-zone z-warn"></span>Watch</span>
           <span class="wh-leg-item"><span class="wh-zone z-bad"></span>High / Low</span>
+        </div>
+        <div id="whDebt" class="wh-debt" style="display:none">
+          <div class="wh-debt-head"><span class="wh-stages-eye">Sleep debt</span><span class="wh-debt-meta" id="whDebtMeta">—</span></div>
+          <div class="wh-debt-bars" id="whDebtBars"></div>
         </div>
         <div id="whVerdict" class="wh-verdict" style="display:none">
           <div class="wh-verdict-head"><span class="wh-verdict-eye">Today's call</span><span id="whVerdictBadge" class="wh-verdict-badge"></span></div>
@@ -742,6 +767,66 @@ main {
     function spo2Zone(s) { if (s == null) return null; if (s >= 95) return 'good'; if (s >= 92) return 'norm'; if (s >= 88) return 'warn'; return 'bad'; }
     function respZone(r) { if (r == null) return null; if (r >= 12 && r <= 18) return 'good'; if (r >= 10 && r <= 22) return 'norm'; return 'warn'; }
 
+    function renderRecoveryTrend(vals) {
+      const svg = $('whTrendSvg'), wrap = $('whTrend');
+      if (!svg || !wrap) return;
+      const nums = vals.filter(v => v != null);
+      if (nums.length < 2) { wrap.style.display = 'none'; return; }
+      wrap.style.display = '';
+      const min = Math.min.apply(null, nums), max = Math.max.apply(null, nums);
+      const range = max - min || 1;
+      const W = 80, H = 28, pad = 3;
+      const pts = nums.map((v, i) => {
+        const x = pad + (W - pad * 2) * (i / (nums.length - 1));
+        const y = H - pad - (H - pad * 2) * ((v - min) / range);
+        return x.toFixed(1) + ' ' + y.toFixed(1);
+      });
+      const path = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p).join(' ');
+      const up = nums[nums.length - 1] >= nums[0];
+      svg.innerHTML = '<path d="' + path + '" fill="none" stroke="' + (up ? 'var(--good)' : 'var(--bad)') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    }
+    function sleepNeedMs(score) {
+      const n = score && score.sleep_needed;
+      if (!n) return null;
+      const base = n.baseline_milli || 0;
+      const debt = n.need_from_sleep_debt_milli || 0;
+      const strain = n.need_from_recent_strain_milli || 0;
+      const nap = n.need_from_recent_nap_milli || 0;
+      return base + debt + strain - nap;
+    }
+    function renderSleepDebt(records) {
+      const wrap = $('whDebt'), bars = $('whDebtBars'), meta = $('whDebtMeta');
+      if (!wrap || !bars) return;
+      const days = (records || []).slice(0, 7).slice().reverse(); // oldest..newest
+      const items = days.map(r => {
+        const score = r && r.score;
+        const ss = score && score.stage_summary;
+        let actual = null;
+        if (ss) {
+          const inBed = ss.total_in_bed_time_milli || 0;
+          const awake = ss.total_awake_time_milli || 0;
+          actual = inBed - awake;
+        }
+        const need = sleepNeedMs(score);
+        const debtMs = (actual != null && need != null) ? (actual - need) : null;
+        const d = r && r.start ? new Date(r.start) : null;
+        return { debtMs, label: d ? d.toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 3).toUpperCase() : '—' };
+      });
+      const valid = items.filter(i => i.debtMs != null);
+      if (!valid.length) { wrap.style.display = 'none'; return; }
+      wrap.style.display = '';
+      const maxAbs = Math.max.apply(null, valid.map(i => Math.abs(i.debtMs))) || 1;
+      bars.innerHTML = items.map(i => {
+        if (i.debtMs == null) {
+          return '<div class="wh-debt-col"><div class="wh-debt-bar-track"></div><span class="wh-debt-day">' + i.label + '</span></div>';
+        }
+        const pct = Math.max(4, Math.round(100 * Math.abs(i.debtMs) / maxAbs));
+        const isDebt = i.debtMs < 0;
+        return '<div class="wh-debt-col"><div class="wh-debt-bar-track"><div class="wh-debt-bar' + (isDebt ? ' is-debt' : '') + '" style="height:' + pct + '%"></div></div><span class="wh-debt-day">' + i.label + '</span></div>';
+      }).join('');
+      const totalDebtMs = valid.reduce((s, i) => s + Math.min(0, i.debtMs), 0);
+      meta.textContent = totalDebtMs < 0 ? ('-' + (Math.abs(totalDebtMs) / 3.6e6).toFixed(1) + 'h last ' + valid.length + ' nights') : 'caught up';
+    }
     function ringStroke(score) {
       // green > yellow > red
       if (score >= 67) return '#6BE3A4';
@@ -768,8 +853,8 @@ main {
       showErr('');
       try {
         const [rec, sleep, cycle] = await Promise.all([
-          whFetch('/recovery?limit=1', t).catch((e)=>{console.error('[whoop] recovery', e.message); return null;}),
-          whFetch('/activity/sleep?limit=1', t).catch((e)=>{console.error('[whoop] sleep', e.message); return null;}),
+          whFetch('/recovery?limit=2', t).catch((e)=>{console.error('[whoop] recovery', e.message); return null;}),
+          whFetch('/activity/sleep?limit=7', t).catch((e)=>{console.error('[whoop] sleep', e.message); return null;}),
           whFetch('/cycle?limit=1', t).catch((e)=>{console.error('[whoop] cycle', e.message); return null;}),
         ]);
 
@@ -782,6 +867,9 @@ main {
           skin = r0.score.skin_temp_celsius != null ? r0.score.skin_temp_celsius : null;
           spo2 = r0.score.spo2_percentage != null ? r0.score.spo2_percentage : null;
         }
+        const r1 = rec && rec.records && rec.records[1];
+        const prevRecScore = (r1 && r1.score && r1.score.recovery_score != null) ? Math.round(r1.score.recovery_score) : null;
+        renderRecoveryTrend([prevRecScore, recScore]);
 
         // Ring
         const fill = $('whRingFill');
@@ -830,6 +918,7 @@ main {
           $('whSleepSub').textContent = hrs;
           zone($('whZoneSleep'), sleepZone(sleepPerf));
         }
+        renderSleepDebt(sleep && sleep.records);
 
         // Strain
         let strain = null, kcal = null;
@@ -869,7 +958,13 @@ main {
           if (strain != null)   reasons.push((strain < 14 ? '·' : '✓') + ' Strain ' + strain.toFixed(1) + ' yesterday — ' + (strain < 14 ? 'room to push today if recovery allows.' : 'high load logged.'));
           if (hrv != null)      reasons.push((hrv >= 50 ? '✓' : '·') + ' HRV ' + hrv + 'ms — ' + (hrv >= 50 ? 'strong autonomic state.' : 'autonomic stress.'));
           if (rhr != null)      reasons.push((rhr <= 60 ? '✓' : '·') + ' RHR ' + rhr + 'bpm — ' + (rhr <= 60 ? 'well-conditioned.' : 'elevated.'));
-          $('whVerdictReasons').innerHTML = reasons.join('<br>');
+          $('whVerdictReasons').innerHTML = '<ul class="wh-reason-list">' + reasons.map(r => {
+            const stripped = r.replace(/^[✓·]\s*/, '');
+            const idx = stripped.indexOf(' — ');
+            const lead = idx >= 0 ? stripped.slice(0, idx) : stripped;
+            const rest = idx >= 0 ? stripped.slice(idx) : '';
+            return '<li class="wh-reason-item"><b>' + lead + '</b>' + rest + '</li>';
+          }).join('') + '</ul>';
         }
 
         const now = new Date();

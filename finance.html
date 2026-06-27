@@ -3,6 +3,7 @@
 <head>
 <script src="lock.js"></script>
 <script src="/api/config"></script>
+<link rel="stylesheet" href="theme.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0b">
@@ -31,9 +32,9 @@
   --border: transparent;
   --border-soft: transparent;
   --accent: #E07658;
-  --success: #6BE3A4;
-  --warning: #F2C063;
-  --danger: #FF6B6B;
+  --success: var(--good);
+  --warning: var(--warn);
+  --danger: var(--bad);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -163,49 +164,17 @@ html, body { scrollbar-width: none; -ms-overflow-style: none; }
 
 /* Section title with reorder controls */
 .section { margin-bottom: 18px; }
-.section-title {
+.fin-page-title { font-size: 32px; margin: 4px 0 2px; color: var(--text-primary); }
+.fin-page-sub {
+  font-family: var(--font-mono);
   font-size: 10.5px;
-  font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  margin-bottom: 16px;
 }
-.section-title::before {
-  content: '';
-  width: 18px;
-  height: 1px;
-  background: var(--text-tertiary);
-  opacity: 0.6;
-}
-.section-title-text { display: inline-flex; align-items: center; gap: 8px; }
-.section-title-text::before {
-  content: '⚡';
-  font-size: 14px;
-  color: var(--text-tertiary);
-  opacity: 0.5;
-}
-.section-reorder { display: inline-flex; gap: 6px; opacity: 0.5; }
-.section-reorder button {
-  background: transparent;
-  border: none;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  font-size: 12px;
-  padding: 0 4px;
-  font-family: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-.section-reorder button:hover { color: var(--text-primary); }
-.section-title::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.08), transparent);
-}
+.fin-ccy-pills { display: flex; gap: 6px; }
+.fin-ccy-pills .pill { padding: 5px 11px; font-size: 11px; }
 
 /* Card */
 .card {
@@ -1143,8 +1112,9 @@ html, body { scrollbar-width: none; -ms-overflow-style: none; }
   text-transform: uppercase;
 }
 .ticker-item-amt {
+  font-family: var(--font-display);
   font-weight: 700;
-  color: #6BE3A4;
+  color: var(--good);
 }
 .finance-ticker.urgent .ticker-item-amt { color: #FF8A8A; }
 .ticker-item-days {
@@ -1897,8 +1867,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   width: 40px;
   height: 40px;
   border: none;
-  border-radius: 10px;
-  background: var(--accent);
+  border-radius: 999px;
+  background: var(--good);
   color: var(--bg-deep);
   font-size: 16px;
   font-weight: 700;
@@ -1929,6 +1899,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   <span>Back</span>
 </a>
 
+<!-- ===== PAGE TITLE ===== -->
+<h1 class="title-serif fin-page-title">Finance</h1>
+<div class="fin-page-sub">NET WORTH · SUBS · ORDERS · WISHLIST</div>
+
 <!-- ===== FINANCE TICKER (rotating subscription renewals) ===== -->
 <div class="finance-ticker hidden" id="financeTicker">
   <span class="ticker-tag" id="tickerTag">RENEWS</span>
@@ -1938,9 +1912,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 <!-- ===== NET WORTH ===== -->
 <div class="section" data-section="net">
-  <div class="section-title">
-    <span class="section-title-text">NET WORTH</span>
-  </div>
+  <div class="section-label"><span class="sl-num">01</span><span class="sl-text">Net Worth</span></div>
 
   <!-- ===== SCAN ANYTHING — AI receipt / screenshot importer ===== -->
   <div class="card scan-card" id="scanCard">
@@ -2033,15 +2005,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         <div id="netWorthTotal" style="font-size:34px;font-weight:700;color:var(--text-primary);line-height:1.05;margin-top:2px">CHF 0</div>
         <div id="netWorthBreakdown" style="font-size:11px;color:var(--text-tertiary);margin-top:4px"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:11px;color:var(--text-tertiary)">CHF</span>
-        <select id="netWorthCurrency" style="background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;cursor:pointer">
-          <option value="CHF">CHF</option>
-          <option value="USD">USD</option>
-          <option value="EUR">EUR</option>
-          <option value="GBP">GBP</option>
-        </select>
+      <div class="fin-ccy-pills" id="ccyPills">
+        <button type="button" class="pill" data-ccy="CHF">CHF</button>
+        <button type="button" class="pill" data-ccy="USD">USD</button>
+        <button type="button" class="pill" data-ccy="EUR">EUR</button>
+        <button type="button" class="pill" data-ccy="GBP">GBP</button>
       </div>
+      <select id="netWorthCurrency" style="display:none">
+        <option value="CHF">CHF</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+      </select>
     </div>
 
     <!-- Overview row: stock-style line chart on the left, donut allocation chart on the right -->
@@ -2165,9 +2140,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 <!-- ===== ACTIVE SUBSCRIPTIONS ===== -->
 <div class="section" data-section="subs">
-  <div class="section-title">
-    <span class="section-title-text">ACTIVE SUBSCRIPTIONS</span>
-  </div>
+  <div class="section-label"><span class="sl-num">02</span><span class="sl-text">Active Subscriptions</span></div>
   <div class="card" style="background:linear-gradient(135deg, rgba(83,74,183,0.07), rgba(216,90,48,0.05));border:1px solid rgba(83,74,183,0.20)">
     <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:12px">
       <div>
@@ -2209,9 +2182,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 <!-- ===== INCOMING ORDERS ===== -->
 <div class="section" data-section="incoming">
-  <div class="section-title">
-    <span class="section-title-text">INCOMING ORDERS</span>
-  </div>
+  <div class="section-label"><span class="sl-num">03</span><span class="sl-text">Incoming Orders</span></div>
 
   <!-- Add card with cost + currency + from-category + arrival date -->
   <div class="card ord-add-card">
@@ -2249,9 +2220,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 <!-- ===== WISHLIST ===== -->
 <div class="section" data-section="wish">
-  <div class="section-title">
-    <span class="section-title-text">WISHLIST</span>
-  </div>
+  <div class="section-label"><span class="sl-num">04</span><span class="sl-text">Wishlist</span></div>
   <!-- Hero card with stats -->
   <div class="card wish-hero">
     <div class="wish-hero-top">
@@ -2301,9 +2270,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 <!-- ===== NOVA — AI MONEY COACH ===== -->
 <div class="section" data-section="nova">
-  <div class="section-title">
-    <span class="section-title-text">NOVA · MONEY COACH</span>
-  </div>
+  <div class="section-label"><span class="sl-num">05</span><span class="sl-text">Your Money Coach</span></div>
 
   <div class="card" style="display:flex;flex-direction:column">
     <div class="nova-feed" id="novaFeed"></div>
@@ -2878,7 +2845,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       storeSet(CURRENCY_KEY, currencyEl.value);
       renderAllNetWorth();
       renderSubs();
+      syncCcyPills();
     });
+  }
+  const ccyPills = document.getElementById('ccyPills');
+  function syncCcyPills() {
+    if (!ccyPills || !currencyEl) return;
+    ccyPills.querySelectorAll('.pill').forEach(b => {
+      b.classList.toggle('pill-active', b.dataset.ccy === currencyEl.value);
+    });
+  }
+  if (ccyPills) {
+    ccyPills.addEventListener('click', (e) => {
+      const b = e.target.closest('.pill');
+      if (!b || !currencyEl) return;
+      currencyEl.value = b.dataset.ccy;
+      currencyEl.dispatchEvent(new Event('change'));
+    });
+    syncCcyPills();
   }
   renderAllNetWorth();
 

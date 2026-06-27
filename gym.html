@@ -3,6 +3,7 @@
 <head>
 <script src="lock.js"></script>
 <script src="/api/config"></script>
+<link rel="stylesheet" href="theme.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0b">
@@ -56,6 +57,10 @@ const CONFIG = {
   // to add weight next session. Lower this to be more aggressive (e.g. 6),
   // raise it for more volume bias (e.g. 10).
   upgradeAtReps: 8,
+
+  // How many sets the "Today's Session" checklist prescribes per exercise
+  // by default (each becomes a tappable "HIT IT" row).
+  sessionSetsDefault: 3,
 
   // Composition estimate (optional, for the weight chart).
   // Estimates how much of recent weight change is muscle vs fat by
@@ -1264,6 +1269,31 @@ img, video, canvas, svg { max-width: 100%; }
 }
 
 .hidden { display: none !important; }
+
+/* ---------- Today's Session ---------- */
+.po-session-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+.po-session-title { font-size: 28px; color: var(--text-1); }
+.po-session-sub { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); margin-top: 2px; }
+.po-session-progress { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); white-space: nowrap; padding-top: 4px; }
+.po-session-list { display: flex; flex-direction: column; gap: 10px; }
+.po-session-rest { padding: 18px 4px; color: var(--text-3); font-size: 13px; text-align: center; }
+.po-sess-card { background: rgba(255,255,255,0.025); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.po-sess-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.po-sess-card-name { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text-1); }
+.po-sess-card-rx { text-align: right; font-size: 13px; font-weight: 700; color: var(--text-1); font-variant-numeric: tabular-nums; }
+.po-sess-card-last { display: block; font-size: 10.5px; font-weight: 500; color: var(--text-3); margin-top: 2px; }
+.po-sess-card-actions { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.po-sess-act { padding: 5px 11px; font-size: 11px; }
+.po-sess-swap-select { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10); color: var(--text-2); border-radius: 999px; padding: 5px 9px; font-family: inherit; font-size: 11px; }
+.po-sess-sets { display: flex; flex-direction: column; gap: 6px; }
+.po-sess-set { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; background: rgba(255,255,255,0.02); }
+.po-sess-set-i { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); width: 16px; }
+.po-sess-set-rx { flex: 1; font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.po-sess-hit { border: 0; border-radius: 999px; padding: 6px 13px; font-family: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; background: var(--good); color: #06281d; }
+.po-sess-hit:active { transform: scale(0.96); }
+.po-sess-set.is-done { opacity: 0.55; }
+.po-sess-set.is-done .po-sess-hit { background: rgba(255,255,255,0.08); color: var(--text-3); }
+.po-sess-set.is-done .po-sess-set-rx { text-decoration: line-through; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1439,6 +1469,18 @@ img, video, canvas, svg { max-width: 100%; }
     <button class="po-icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
+  </div>
+
+  <div class="card po-session" id="poSession">
+    <div class="po-session-head">
+      <div>
+        <h2 class="title-serif po-session-title" id="poSessionTitle">—</h2>
+        <div class="po-session-sub" id="poSessionSub">—</div>
+      </div>
+      <div class="po-session-progress" id="poSessionProgress">—</div>
+    </div>
+    <div class="po-session-list" id="poSessionList"></div>
+    <div class="po-session-rest hidden" id="poSessionRest">Rest day — no session today.</div>
   </div>
 
   <div class="card">
@@ -1718,6 +1760,7 @@ img, video, canvas, svg { max-width: 100%; }
     s.days  = (Array.isArray(s.days)  && s.days.length)  ? s.days  : CONFIG.days.slice();
     s.exercises = Array.isArray(s.exercises) ? s.exercises : buildDefaultExercises();
     s.logs = (s.logs && typeof s.logs === 'object') ? s.logs : {};
+    s.sessionSwaps = (s.sessionSwaps && typeof s.sessionSwaps === 'object') ? s.sessionSwaps : {};
     s.filterGym = s.filterGym || s.gyms[0].id;
     s.filterDay = s.filterDay || s.days[0].id;
     // Split rotation lives in state so the user can edit it via the pill modal.
@@ -1765,6 +1808,37 @@ img, video, canvas, svg { max-width: 100%; }
   function getFiltered() {
     return state.exercises.filter(e =>
       (e.gym === state.filterGym || e.gym === 'both') && e.day === state.filterDay);
+  }
+  // today's exercises, for the "Today's Session" view. todaySplit().name is
+  // a display name ("Push"/"Rest") — resolve it back to a day id to filter
+  // exercises (state.days holds {id, name} pairs; e.day stores the id).
+  function todaySplitDayId() {
+    const split = todaySplit();
+    if (isRestName(split.name)) return null;
+    const d = state.days.find(x => x.name.toLowerCase() === split.name.toLowerCase());
+    return d ? d.id : null;
+  }
+  function getTodaysExercises() {
+    const dayId = todaySplitDayId();
+    if (!dayId) return [];
+    const pool = state.exercises.filter(e =>
+      (e.gym === state.filterGym || e.gym === 'both') && e.day === dayId);
+    // Apply any persisted slot swaps (original exercise id -> replacement id).
+    return pool.map(e => {
+      const swapId = state.sessionSwaps[e.id];
+      if (!swapId) return e;
+      const swapped = state.exercises.find(x => x.id === swapId);
+      return swapped || e;
+    });
+  }
+  // Order-based tier inference — first exercise of the day is the main
+  // compound lift (Tier 1), the rest are accessories (Tier 2). No new
+  // exercise field; upgrade to an explicit ex.tier later if it needs to
+  // be user-editable.
+  function tierFor(index) { return index === 0 ? 1 : 2; }
+  function isToday(iso) {
+    const d = new Date(iso), t = new Date();
+    return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
   }
   function getCurrentEx() {
     const f = getFiltered();
@@ -2026,6 +2100,68 @@ img, video, canvas, svg { max-width: 100%; }
     splitEl.classList.toggle('is-rest', isRestName(split.name));
   }
 
+  // ---------- Today's Session ----------
+  function renderSessionView() {
+    const titleEl = $('poSessionTitle'), subEl = $('poSessionSub'), progEl = $('poSessionProgress');
+    const listEl = $('poSessionList'), restEl = $('poSessionRest');
+    if (!titleEl) return;
+    const split = todaySplit();
+    titleEl.textContent = isRestName(split.name) ? 'Rest' : split.name;
+    subEl.textContent = 'DAY ' + (split.index + 1) + ' OF ' + ((state.splitRotation && state.splitRotation.length) || 1);
+
+    const todays = getTodaysExercises();
+    if (!todays.length) {
+      listEl.innerHTML = '';
+      restEl.classList.remove('hidden');
+      progEl.textContent = '—';
+      return;
+    }
+    restEl.classList.add('hidden');
+
+    const sets = CONFIG.sessionSetsDefault || 3;
+    let doneTotal = 0, targetTotal = 0;
+    const html = todays.map((ex, i) => {
+      const logs = state.logs[ex.id] || [];
+      const rx = getRx(ex, logs);
+      const last = logs.length ? logs[logs.length - 1] : null;
+      const repsTarget = rx ? rx.reps : ex.repMin;
+      const weightTarget = rx ? rx.weight : (ex.startWeight || 0);
+      const doneToday = logs.filter(l => isToday(l.date)).length;
+      doneTotal += Math.min(doneToday, sets);
+      targetTotal += sets;
+      const rxHead = ex.bw ? (repsTarget + ' reps') : (weightTarget + unit() + ' × ' + repsTarget + ' reps');
+      const lastStr = last ? (ex.bw ? (last.reps + ' reps') : (last.weight + unit())) : '—';
+      const otherExOptions = state.exercises
+        .filter(o => (o.gym === ex.gym || o.gym === 'both' || ex.gym === 'both') && o.id !== ex.id)
+        .map(o => '<option value="' + o.id + '">' + escape(o.name) + '</option>').join('');
+      const romanNums = ['i', 'ii', 'iii', 'iv', 'v', 'vi'];
+      const setsHtml = Array.from({ length: sets }).map((_, si) => {
+        const isDone = si < doneToday;
+        const roman = romanNums[si] || String(si + 1);
+        const setRx = ex.bw ? (repsTarget + ' reps') : (weightTarget + unit() + ' × ' + repsTarget);
+        return '<div class="po-sess-set' + (isDone ? ' is-done' : '') + '">'
+          + '<span class="po-sess-set-i">' + roman + '</span>'
+          + '<span class="po-sess-set-rx">' + setRx + '</span>'
+          + '<button type="button" class="po-sess-hit" data-act="hit" data-ex="' + ex.id + '" data-w="' + weightTarget + '" data-r="' + repsTarget + '"' + (isDone ? ' disabled' : '') + '>' + (isDone ? 'Done' : 'HIT IT →') + '</button>'
+          + '</div>';
+      }).join('');
+      return '<div class="po-sess-card">'
+        + '<div class="po-sess-card-head">'
+          + '<div class="po-sess-card-name">' + escape(ex.name) + ' <span class="badge-tier' + tierFor(i) + '">TIER ' + tierFor(i) + '</span></div>'
+          + '<div class="po-sess-card-rx">' + rxHead + '<span class="po-sess-card-last">LAST ' + lastStr + '</span></div>'
+        + '</div>'
+        + '<div class="po-sess-card-actions">'
+          + '<button type="button" class="pill po-sess-act" data-act="tune" data-ex="' + ex.id + '">tune</button>'
+          + '<button type="button" class="pill po-sess-act" data-act="history" data-ex="' + ex.id + '">history</button>'
+          + '<select class="po-sess-swap-select" data-act="swap" data-ex="' + ex.id + '"><option value="">swap…</option>' + otherExOptions + '</select>'
+        + '</div>'
+        + '<div class="po-sess-sets">' + setsHtml + '</div>'
+        + '</div>';
+    }).join('');
+    listEl.innerHTML = html;
+    progEl.textContent = doneTotal + ' of ' + targetTotal + ' logged';
+  }
+
   // Build the rep buttons based on the current exercise's repMin/repMax.
   // Always spans repMin → repMax + 2 (a small buffer for over-performing
   // sets that trigger the upgrade signal), capped at 16 buttons total so
@@ -2061,6 +2197,7 @@ img, video, canvas, svg { max-width: 100%; }
 
   function renderAll() {
     renderDayPill();
+    renderSessionView();
     renderFilters(); renderSelect(); renderForm(); renderLastSet();
     renderRepsRow();
     renderRx(); renderStats(); renderSparkline(); renderHistory();
@@ -2273,6 +2410,16 @@ img, video, canvas, svg { max-width: 100%; }
     p.classList.add('active');
     $('repsRow').dataset.value = p.dataset.v;
   });
+  // Single place a set ever gets written — both the manual logger form
+  // (#logBtn below) and the Today's Session "HIT IT" buttons call this.
+  function hitSet(ex, weight, reps) {
+    const arr = state.logs[ex.id] || [];
+    arr.push({ weight: weight, reps: reps, date: new Date().toISOString() });
+    state.logs[ex.id] = arr;
+    saveState(); renderAll();
+    // Strength changed → composition estimate may shift
+    if (typeof wtRender === 'function') wtRender();
+  }
   $('logBtn').addEventListener('click', () => {
     const ex = getCurrentEx();
     if (!ex) return;
@@ -2280,17 +2427,46 @@ img, video, canvas, svg { max-width: 100%; }
     if (reps <= 0) { alert('Pick a rep count.'); return; }
     const w = ex.bw ? 0 : (parseFloat($('weightInput').value) || 0);
     if (!ex.bw && w <= 0) { alert('Enter a weight.'); return; }
-    const arr = state.logs[ex.id] || [];
-    arr.push({ weight: w, reps: reps, date: new Date().toISOString() });
-    state.logs[ex.id] = arr;
-    saveState(); renderAll();
-    // Strength changed → composition estimate may shift
-    if (typeof wtRender === 'function') wtRender();
+    hitSet(ex, w, reps);
     // Tiny pulse on the button so the user feels the save
     const btn = $('logBtn');
     btn.style.transition = 'transform 0.15s';
     btn.style.transform = 'scale(0.96)';
     setTimeout(() => { btn.style.transform = ''; }, 160);
+  });
+
+  // ---------- Today's Session interactions (delegated — the list is
+  // rebuilt via innerHTML on every render, so bind once on the parent) ----------
+  $('poSessionList').addEventListener('click', (e) => {
+    const hitBtn = e.target.closest('[data-act="hit"]');
+    if (hitBtn) {
+      const ex = state.exercises.find(x => x.id === hitBtn.dataset.ex);
+      if (ex) hitSet(ex, parseFloat(hitBtn.dataset.w) || 0, parseInt(hitBtn.dataset.r, 10) || 0);
+      return;
+    }
+    const tuneBtn = e.target.closest('[data-act="tune"]');
+    if (tuneBtn) {
+      const ex = state.exercises.find(x => x.id === tuneBtn.dataset.ex);
+      if (ex) openExModal('edit', ex);
+      return;
+    }
+    const histBtn = e.target.closest('[data-act="history"]');
+    if (histBtn) {
+      const ex = state.exercises.find(x => x.id === histBtn.dataset.ex);
+      if (!ex) return;
+      state.currentEx = ex.id;
+      if (ex.gym !== 'both') state.filterGym = ex.gym;
+      state.filterDay = ex.day;
+      saveState(); renderAll();
+      const hc = $('historyCard');
+      if (hc) hc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+  $('poSessionList').addEventListener('change', (e) => {
+    const sel = e.target.closest('[data-act="swap"]');
+    if (!sel || !sel.value) return;
+    state.sessionSwaps[sel.dataset.ex] = sel.value;
+    saveState(); renderAll();
   });
 
   // ============================================================

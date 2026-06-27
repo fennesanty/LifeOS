@@ -1,0 +1,106 @@
+/* ============================================================
+   Shared dashboard design tokens.
+   Additive only — never redefines selectors a page already
+   owns (.card, .tile, .po-sub-title, etc). Loaded before each
+   page's own <style> block so page-specific rules still win.
+   ============================================================ */
+:root {
+  --bg-deep: #050506;
+  --bg: #0A0A0B;
+  --text-primary: #FAFAFA;
+  --text-secondary: #B8B6B0;
+  --text-tertiary: #76746E;
+  --text-quaternary: #4D4B47;
+  --good: #6BE3A4;
+  --warn: #F2C063;
+  --bad: #FF8A8A;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: 'Times New Roman', Georgia, serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 18px;
+}
+
+.title-serif {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* "·0N LABEL ——" numbered section header */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-family: var(--font-mono);
+}
+.section-label .sl-num {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+.section-label .sl-num::before {
+  content: '·';
+  margin-right: 1px;
+}
+.section-label .sl-text {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.14), transparent);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.pill:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+.pill-active {
+  background: rgba(107,227,164,0.16);
+  border-color: rgba(107,227,164,0.5);
+  color: var(--good);
+}
+
+.badge-tier1, .badge-tier2 {
+  display: inline-flex;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.badge-tier1 {
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.08);
+}
+.badge-tier2 {
+  color: var(--text-tertiary);
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+}
