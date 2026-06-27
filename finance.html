@@ -1570,6 +1570,354 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 @media (max-width: 600px) {
   .sub-auto-toggle { width: 100%; justify-content: space-between; padding: 12px 14px; }
 }
+
+/* ============================================================
+   SCAN ANYTHING — AI receipt / screenshot importer
+   ============================================================ */
+.scan-card {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+.scan-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.scan-head-icon { font-size: 20px; line-height: 1.2; }
+.scan-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.scan-subtitle {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.scan-dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: 18px;
+  background: rgba(0,0,0,0.30);
+  border: 1.5px dashed rgba(255,255,255,0.14);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.scan-dropzone:hover { border-color: rgba(255,255,255,0.24); }
+.scan-dropzone.dragover {
+  background: rgba(110,231,183,0.07);
+  border-color: rgba(110,231,183,0.45);
+}
+.scan-dropzone.has-error {
+  border-color: rgba(255,138,138,0.40);
+  background: rgba(255,138,138,0.06);
+}
+.scan-dz-icon { font-size: 22px; margin-bottom: 6px; }
+.scan-dz-text {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.scan-dz-text b { color: var(--text-primary); }
+.scan-dz-busy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.scan-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.scan-spinner {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-top-color: #6EE7B7;
+  animation: scanSpin 0.8s linear infinite;
+}
+@keyframes scanSpin { to { transform: rotate(360deg); } }
+.scan-dz-status {
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+.scan-dz-error {
+  font-size: 12.5px;
+  color: #FF8A8A;
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+.scan-confirm-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.scan-thumb-sm { width: 52px; height: 52px; flex-shrink: 0; }
+.scan-confirm-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.scan-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.scan-field label {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+.scan-field input, .scan-field select {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  min-width: 0;
+  width: 100%;
+}
+.scan-field input:focus, .scan-field select:focus { border-color: rgba(110,231,183,0.45); }
+.scan-field select { cursor: pointer; }
+.scan-field-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; }
+.scan-cat-note {
+  font-size: 10.5px;
+  color: #6EE7B7;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+.scan-items {
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.22);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.scan-items-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  margin-bottom: 6px;
+}
+.scan-item-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+  color: var(--text-secondary);
+}
+.scan-item-row span:last-child {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.scan-hint {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(110,231,183,0.06);
+  border: 1px solid rgba(110,231,183,0.14);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  line-height: 1.5;
+}
+.scan-hint.warn { background: rgba(255,138,138,0.08); border-color: rgba(255,138,138,0.20); color: #FF8A8A; }
+
+.scan-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+.scan-discard-btn, .scan-apply-btn {
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+.scan-discard-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--text-tertiary);
+}
+.scan-discard-btn:hover { color: var(--text-primary); border-color: rgba(255,255,255,0.20); }
+.scan-apply-btn {
+  background: linear-gradient(180deg, #6EE7B7, #4ED4A0);
+  color: #04201A;
+  box-shadow: 0 4px 14px rgba(110,231,183,0.22);
+  transition: transform 0.12s, box-shadow 0.18s;
+}
+.scan-apply-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(110,231,183,0.36); }
+.scan-apply-btn:active { transform: scale(0.97); }
+
+@media (max-width: 600px) {
+  .scan-confirm-top { flex-direction: column; align-items: center; text-align: center; }
+  .scan-field-row { grid-template-columns: 1fr 1fr; }
+}
+
+.scan-dropzone.hidden,
+.scan-dz-idle.hidden,
+.scan-dz-busy.hidden,
+.scan-dz-error.hidden,
+.scan-confirm.hidden,
+.scan-items.hidden,
+.scan-cat-note.hidden { display: none; }
+
+/* ============================================================
+   NOVA — AI money coach chat tab
+   ============================================================ */
+.nova-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 240px;
+  max-height: 56vh;
+  overflow-y: auto;
+  padding: 4px 2px 8px;
+  margin-bottom: 12px;
+}
+.nova-msg { max-width: 92%; }
+.nova-msg.user { align-self: flex-end; }
+.nova-msg.nova { align-self: flex-start; }
+.nova-bubble {
+  border-radius: var(--radius-lg);
+  padding: 11px 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.nova-msg.user .nova-bubble {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-primary);
+}
+.nova-msg.nova .nova-bubble {
+  background: rgba(224,118,88,0.07);
+  border: 1px solid rgba(224,118,88,0.22);
+  border-left: 2.5px solid var(--accent);
+  color: var(--text-primary);
+}
+.nova-tag {
+  display: inline-block;
+  margin-bottom: 7px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bg-deep);
+  background: var(--accent);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.nova-dots { display: inline-flex; gap: 5px; padding: 2px 0; }
+.nova-dots i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); opacity: 0.4;
+  animation: novaDot 1.2s ease-in-out infinite;
+}
+.nova-dots i:nth-child(2) { animation-delay: 0.2s; }
+.nova-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes novaDot { 0%, 100% { opacity: 0.35; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
+
+.nova-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.nova-chip {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.nova-chip:hover { background: rgba(255,255,255,0.09); color: var(--text-primary); border-color: rgba(255,255,255,0.18); }
+.nova-chip:active { transform: scale(0.97); }
+
+.nova-composer {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 6px;
+  background: rgba(0,0,0,0.30);
+  border-radius: 14px;
+}
+.nova-composer textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  padding: 9px 10px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  max-height: 110px;
+}
+.nova-composer textarea::placeholder { color: var(--text-tertiary); }
+.nova-send-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--bg-deep);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nova-send-btn:hover { filter: brightness(1.08); }
+.nova-send-btn:active { transform: scale(0.94); }
+.nova-send-btn:disabled { opacity: 0.45; cursor: default; }
+
+.nova-disclaimer {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-align: center;
+  margin-top: 10px;
+  letter-spacing: 0.01em;
+}
 </style>
 </head>
 <body>
@@ -1593,6 +1941,91 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   <div class="section-title">
     <span class="section-title-text">NET WORTH</span>
   </div>
+
+  <!-- ===== SCAN ANYTHING — AI receipt / screenshot importer ===== -->
+  <div class="card scan-card" id="scanCard">
+    <div class="scan-head">
+      <div class="scan-head-icon">🧾</div>
+      <div>
+        <div class="scan-title">Scan anything</div>
+        <div class="scan-subtitle">Drop a receipt or a bank screenshot — AI reads it, you name the account</div>
+      </div>
+    </div>
+
+    <div class="scan-dropzone" id="scanDropzone" tabindex="0" role="button" aria-label="Upload a financial image">
+      <input type="file" id="scanFileInput" accept="image/*" hidden />
+      <div class="scan-dz-idle" id="scanDzIdle">
+        <div>
+          <div class="scan-dz-icon">📷</div>
+          <div class="scan-dz-text">Drag &amp; drop, <b>click to upload</b>, or paste (⌘V) an image</div>
+        </div>
+      </div>
+      <div class="scan-dz-busy hidden" id="scanDzBusy">
+        <img class="scan-thumb" id="scanThumb" alt="" />
+        <div class="scan-spinner"></div>
+        <div class="scan-dz-status">Reading image…</div>
+      </div>
+      <div class="scan-dz-error hidden" id="scanDzError"></div>
+    </div>
+
+    <div class="scan-confirm hidden" id="scanConfirm">
+      <div class="scan-confirm-top">
+        <img class="scan-thumb scan-thumb-sm" id="scanConfirmThumb" alt="" />
+        <div class="scan-confirm-fields">
+          <div class="scan-field">
+            <label for="scanName">Account / bank name</label>
+            <input type="text" id="scanName" list="scanAccountNames" placeholder="e.g. Revolut" autocomplete="off" />
+            <datalist id="scanAccountNames"></datalist>
+            <div class="scan-cat-note hidden" id="scanCatNote"></div>
+          </div>
+          <div class="scan-field-row">
+            <div class="scan-field">
+              <label for="scanAmount">Amount</label>
+              <input type="number" id="scanAmount" step="0.01" />
+            </div>
+            <div class="scan-field">
+              <label for="scanCurrency">Currency</label>
+              <select id="scanCurrency">
+                <option value="CHF">CHF</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </div>
+          </div>
+          <div class="scan-field-row">
+            <div class="scan-field">
+              <label for="scanAction">Action</label>
+              <select id="scanAction">
+                <option value="set">Set balance</option>
+                <option value="add">Add to account</option>
+                <option value="spend">Spend (deduct)</option>
+              </select>
+            </div>
+            <div class="scan-field" id="scanCatField">
+              <label for="scanCategory">Category (new accounts)</label>
+              <select id="scanCategory">
+                <option value="bank">🏦 Bank</option>
+                <option value="stocks">📈 Stocks</option>
+                <option value="crypto">🪙 Crypto</option>
+                <option value="other">💼 Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scan-items hidden" id="scanItems"></div>
+
+      <div class="scan-hint" id="scanHint"></div>
+
+      <div class="scan-actions">
+        <button class="scan-discard-btn" id="scanDiscardBtn">Discard</button>
+        <button class="scan-apply-btn" id="scanApplyBtn">Apply</button>
+      </div>
+    </div>
+  </div>
+
   <div class="card" style="background:transparent;border:none !important;box-shadow:none;padding:0;overflow:visible">
     <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:14px">
       <div>
@@ -1866,6 +2299,30 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   </div>
 </div>
 
+<!-- ===== NOVA — AI MONEY COACH ===== -->
+<div class="section" data-section="nova">
+  <div class="section-title">
+    <span class="section-title-text">NOVA · MONEY COACH</span>
+  </div>
+
+  <div class="card" style="display:flex;flex-direction:column">
+    <div class="nova-feed" id="novaFeed"></div>
+
+    <div class="nova-chips" id="novaChips">
+      <button class="nova-chip" data-q="How's my net worth looking?">How's my net worth looking?</button>
+      <button class="nova-chip" data-q="Where is my money leaking each month?">Where's my money leaking?</button>
+      <button class="nova-chip" data-q="Can I afford anything on my wishlist right now?">Can I afford my wishlist?</button>
+      <button class="nova-chip" data-q="Any subscriptions I should cut?">Subscriptions to cut?</button>
+    </div>
+
+    <div class="nova-composer">
+      <textarea id="novaInput" rows="1" placeholder="Ask Nova about your finances…"></textarea>
+      <button class="nova-send-btn" id="novaSendBtn" aria-label="Send">↑</button>
+    </div>
+    <div class="nova-disclaimer">Nova gives general guidance based on your data — not regulated financial advice.</div>
+  </div>
+</div>
+
 </div>
 
 <!-- ===== BOTTOM TAB BAR ===== -->
@@ -1885,6 +2342,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   <button class="bot-tab" data-tab="wish">
     <span class="bot-tab-icon">🎯</span>
     <span class="bot-tab-label">Wishlist</span>
+  </button>
+  <button class="bot-tab" data-tab="nova">
+    <span class="bot-tab-icon">✨</span>
+    <span class="bot-tab-label">Nova</span>
   </button>
 </nav>
 
@@ -1935,7 +2396,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
   tabs.forEach(b => b.addEventListener('click', () => setActiveTab(b.dataset.tab)));
   const savedTab = storeGet(TAB_KEY);
-  setActiveTab(savedTab && ['net','subs','incoming','wish'].includes(savedTab) ? savedTab : 'net');
+  setActiveTab(savedTab && ['net','subs','incoming','wish','nova'].includes(savedTab) ? savedTab : 'net');
 
   // ============================================================
   // NET WORTH (copied from the main dashboard, verbatim logic)
@@ -3376,6 +3837,415 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
   safeRenderTicker();
   setInterval(safeRenderTicker, 1500);
+
+  // ============================================================
+  // SCAN ANYTHING — drop/paste/upload a financial image, read it
+  // with /api/receipt (forced tool-use JSON), confirm, then apply
+  // to a net-worth account via the normal storeSet + logActivity
+  // + renderAllNetWorth path.
+  // ============================================================
+  const scanCard = document.getElementById('scanCard');
+  const scanDropzone = document.getElementById('scanDropzone');
+  const scanFileInput = document.getElementById('scanFileInput');
+  const scanDzIdle = document.getElementById('scanDzIdle');
+  const scanDzBusy = document.getElementById('scanDzBusy');
+  const scanThumb = document.getElementById('scanThumb');
+  const scanDzError = document.getElementById('scanDzError');
+  const scanConfirm = document.getElementById('scanConfirm');
+  const scanConfirmThumb = document.getElementById('scanConfirmThumb');
+  const scanNameInput = document.getElementById('scanName');
+  const scanAccountNamesEl = document.getElementById('scanAccountNames');
+  const scanCatNote = document.getElementById('scanCatNote');
+  const scanAmountInput = document.getElementById('scanAmount');
+  const scanCurrencyInput = document.getElementById('scanCurrency');
+  const scanActionInput = document.getElementById('scanAction');
+  const scanCategoryInput = document.getElementById('scanCategory');
+  const scanItemsEl = document.getElementById('scanItems');
+  const scanHintEl = document.getElementById('scanHint');
+  const scanDiscardBtn = document.getElementById('scanDiscardBtn');
+  const scanApplyBtn = document.getElementById('scanApplyBtn');
+
+  const SCAN_CAT_LABELS = { bank: 'Bank', stocks: 'Stocks', crypto: 'Crypto', other: 'Other' };
+  let scanBusy = false;
+
+  if (scanCard) {
+    function scanClearError() {
+      scanDzError.classList.add('hidden');
+      scanDzError.textContent = '';
+      scanDropzone.classList.remove('has-error');
+      scanDzIdle.classList.remove('hidden');
+    }
+    function scanShowError(msg) {
+      scanBusy = false;
+      scanDzBusy.classList.add('hidden');
+      scanDzIdle.classList.add('hidden');
+      scanDzError.textContent = '⚠️ ' + msg;
+      scanDzError.classList.remove('hidden');
+      scanDropzone.classList.add('has-error');
+      scanConfirm.classList.add('hidden');
+      scanDropzone.classList.remove('hidden');
+    }
+    function scanResetToDropzone() {
+      scanBusy = false;
+      scanConfirm.classList.add('hidden');
+      scanDzBusy.classList.add('hidden');
+      scanClearError();
+      scanDropzone.classList.remove('hidden');
+      scanThumb.removeAttribute('src');
+      scanConfirmThumb.removeAttribute('src');
+      if (scanFileInput) scanFileInput.value = '';
+    }
+
+    function scanDownscaleImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const MAX_EDGE = 1568;
+            let { width, height } = img;
+            const longEdge = Math.max(width, height);
+            if (longEdge > MAX_EDGE) {
+              const scale = MAX_EDGE / longEdge;
+              width = Math.round(width * scale);
+              height = Math.round(height * scale);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.85));
+          };
+          img.onerror = () => reject(new Error('Could not load that image'));
+          img.src = reader.result;
+        };
+        reader.onerror = () => reject(new Error('Could not read that file'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function scanRefreshAccountNames() {
+      if (!scanAccountNamesEl) return;
+      const accounts = listAllNwAccounts();
+      scanAccountNamesEl.innerHTML = accounts
+        .map(a => '<option value="' + escapeHtml(a.itemName) + '"></option>')
+        .join('');
+    }
+    function scanFindAccountMatch(name) {
+      const n = (name || '').trim().toLowerCase();
+      if (!n) return null;
+      return listAllNwAccounts().find(a => a.itemName.toLowerCase() === n) || null;
+    }
+    function scanSyncAccountMatch() {
+      const match = scanFindAccountMatch(scanNameInput.value);
+      if (match) {
+        scanCategoryInput.value = match.catKey;
+        scanCategoryInput.disabled = true;
+        scanCatNote.textContent = 'Existing ' + SCAN_CAT_LABELS[match.catKey] + ' account — category locked';
+        scanCatNote.classList.remove('hidden');
+      } else {
+        scanCategoryInput.disabled = false;
+        scanCatNote.classList.add('hidden');
+        scanCatNote.textContent = '';
+      }
+      return match;
+    }
+    function scanUpdateHint() {
+      const name = scanNameInput.value.trim();
+      const amtRaw = parseFloat(scanAmountInput.value);
+      scanHintEl.classList.remove('warn');
+      if (!name || isNaN(amtRaw)) {
+        scanHintEl.textContent = 'Fill in a name and amount to see what this will do.';
+        return;
+      }
+      const currency = scanCurrencyInput.value;
+      const action = scanActionInput.value;
+      const rate = exchangeRates[currency] || 1;
+      const amountCHF = amtRaw / rate;
+      const match = scanFindAccountMatch(name);
+      const isNew = !match;
+      const curCHF = match ? match.amountCHF : 0;
+      let nextCHF;
+      if (action === 'set') nextCHF = amountCHF;
+      else if (action === 'add') nextCHF = curCHF + amountCHF;
+      else nextCHF = curCHF - amountCHF;
+      const catLabel = SCAN_CAT_LABELS[match ? match.catKey : scanCategoryInput.value];
+      let sentence;
+      if (isNew) {
+        sentence = 'Will create a new ' + catLabel + ' account "' + name + '" set to ' + fmtMoney(nextCHF) + '.';
+      } else if (action === 'set') {
+        sentence = 'Will set ' + name + ' (' + catLabel + ') to ' + fmtMoney(nextCHF) + ' — currently ' + fmtMoney(curCHF) + '.';
+      } else if (action === 'add') {
+        sentence = 'Will add ' + fmtMoney(amountCHF) + ' to ' + name + ' (' + catLabel + ') → ' + fmtMoney(nextCHF) + '.';
+      } else {
+        sentence = 'Will deduct ' + fmtMoney(amountCHF) + ' from ' + name + ' (' + catLabel + ') → ' + fmtMoney(nextCHF) + '.';
+      }
+      if (nextCHF < 0) {
+        sentence += ' ⚠️ This goes negative.';
+        scanHintEl.classList.add('warn');
+      }
+      scanHintEl.textContent = sentence;
+    }
+    function scanFillConfirm(data, thumbDataUrl) {
+      scanConfirmThumb.src = thumbDataUrl;
+      scanNameInput.value = data.source || '';
+      scanAmountInput.value = (typeof data.amount === 'number' && !isNaN(data.amount)) ? data.amount : '';
+      let cur = (data.currency || '').toUpperCase().trim();
+      if (!cur) cur = currencyEl ? currencyEl.value : 'CHF';
+      if (![...scanCurrencyInput.options].some(o => o.value === cur)) {
+        const opt = document.createElement('option');
+        opt.value = cur; opt.textContent = cur;
+        scanCurrencyInput.appendChild(opt);
+      }
+      scanCurrencyInput.value = cur;
+      const actionByKind = { balance: 'set', income: 'add', expense: 'spend' };
+      scanActionInput.value = actionByKind[data.kind] || 'set';
+      scanCategoryInput.value = 'bank';
+      const items = Array.isArray(data.items) ? data.items : [];
+      if (items.length) {
+        scanItemsEl.innerHTML = '<div class="scan-items-label">Line items</div>' +
+          items.map(it => '<div class="scan-item-row"><span>' + escapeHtml(it.name || '') + '</span><span>' +
+            (Number(it.amount) || 0).toFixed(2) + '</span></div>').join('');
+        scanItemsEl.classList.remove('hidden');
+      } else {
+        scanItemsEl.innerHTML = '';
+        scanItemsEl.classList.add('hidden');
+      }
+      scanSyncAccountMatch();
+      scanUpdateHint();
+      scanDropzone.classList.add('hidden');
+      scanConfirm.classList.remove('hidden');
+    }
+
+    async function scanHandleFile(file) {
+      if (scanBusy || !file) return;
+      if (!file.type || file.type.indexOf('image') !== 0) {
+        scanShowError('Please drop an image file.');
+        return;
+      }
+      scanBusy = true;
+      scanClearError();
+      scanDzIdle.classList.add('hidden');
+      scanDzBusy.classList.remove('hidden');
+      try {
+        const dataUrl = await scanDownscaleImage(file);
+        scanThumb.src = dataUrl;
+        const base64 = dataUrl.split(',')[1];
+        const res = await fetch('/api/receipt', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ image: base64, mediaType: 'image/jpeg' })
+        });
+        const json = await res.json();
+        if (!res.ok || json.error) {
+          scanShowError(json.error || 'Could not read that image — try again.');
+          return;
+        }
+        if (json.readable === false) {
+          scanShowError("Couldn't find an amount in that image — try a clearer shot.");
+          return;
+        }
+        scanRefreshAccountNames();
+        scanFillConfirm(json, dataUrl);
+      } catch (e) {
+        scanShowError('Something went wrong reading that image.');
+      } finally {
+        scanBusy = false;
+      }
+    }
+
+    function scanApply() {
+      const name = scanNameInput.value.trim();
+      const amtRaw = parseFloat(scanAmountInput.value);
+      if (!name || isNaN(amtRaw)) return;
+      const currency = scanCurrencyInput.value;
+      const action = scanActionInput.value;
+      const rate = exchangeRates[currency] || 1;
+      const amountCHF = amtRaw / rate;
+
+      const match = scanFindAccountMatch(name);
+      let catKey, items, idx, curCHF, isNew;
+      if (match) {
+        catKey = match.catKey;
+        items = storeGet('nw:' + catKey) || [];
+        idx = match.itemIdx;
+        curCHF = Number(items[idx].amount) || 0;
+        isNew = false;
+      } else {
+        catKey = scanCategoryInput.value || 'bank';
+        items = storeGet('nw:' + catKey) || [];
+        idx = -1;
+        curCHF = 0;
+        isNew = true;
+      }
+
+      let nextCHF;
+      if (action === 'set') nextCHF = amountCHF;
+      else if (action === 'add') nextCHF = curCHF + amountCHF;
+      else nextCHF = curCHF - amountCHF;
+
+      if (nextCHF < 0 && !confirm('This will make "' + name + '" negative (' + fmtMoney(nextCHF) + '). Continue?')) {
+        return;
+      }
+
+      if (isNew) {
+        items.push({ name, amount: nextCHF });
+        storeSet('nw:' + catKey, items);
+        logActivity(catKey, name, nextCHF, 'add');
+      } else {
+        const deltaCHF = nextCHF - curCHF;
+        items[idx].amount = nextCHF;
+        storeSet('nw:' + catKey, items);
+        if (Math.abs(deltaCHF) > 0.005) logActivity(catKey, name, deltaCHF, 'edit');
+      }
+
+      renderAllNetWorth();
+      scanResetToDropzone();
+    }
+
+    scanDropzone.addEventListener('click', () => {
+      if (scanBusy) return;
+      scanClearError();
+      scanFileInput.click();
+    });
+    scanDropzone.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !scanBusy) { e.preventDefault(); scanFileInput.click(); }
+    });
+    scanFileInput.addEventListener('change', () => {
+      const f = scanFileInput.files && scanFileInput.files[0];
+      if (f) scanHandleFile(f);
+    });
+    scanDropzone.addEventListener('dragover', (e) => { e.preventDefault(); scanDropzone.classList.add('dragover'); });
+    scanDropzone.addEventListener('dragleave', () => scanDropzone.classList.remove('dragover'));
+    scanDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      scanDropzone.classList.remove('dragover');
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) scanHandleFile(f);
+    });
+    // Only hijack ⌘V / Ctrl+V into an image scan while the Net Worth tab is
+    // actually visible — otherwise pasting on the Subs/Orders/Wishlist/Nova
+    // tabs would unexpectedly trigger the scanner.
+    document.addEventListener('paste', (e) => {
+      const netSection = document.querySelector('.section[data-section="net"]');
+      if (!netSection || netSection.hidden) return;
+      const items = (e.clipboardData && e.clipboardData.items) || [];
+      let imageFile = null;
+      for (const it of items) {
+        if (it.type && it.type.indexOf('image') === 0) { imageFile = it.getAsFile(); break; }
+      }
+      if (!imageFile) return;
+      e.preventDefault();
+      scanHandleFile(imageFile);
+    });
+
+    scanNameInput.addEventListener('input', () => { scanSyncAccountMatch(); scanUpdateHint(); });
+    scanAmountInput.addEventListener('input', scanUpdateHint);
+    scanCurrencyInput.addEventListener('change', scanUpdateHint);
+    scanActionInput.addEventListener('change', scanUpdateHint);
+    scanCategoryInput.addEventListener('change', scanUpdateHint);
+    scanDiscardBtn.addEventListener('click', scanResetToDropzone);
+    scanApplyBtn.addEventListener('click', scanApply);
+  }
+
+  // ============================================================
+  // NOVA — AI money coach chat. Builds a finance snapshot from
+  // localStorage, posts it + the running conversation to
+  // /api/nova, and renders the replies as chat bubbles.
+  // ============================================================
+  const novaFeed = document.getElementById('novaFeed');
+  const novaInput = document.getElementById('novaInput');
+  const novaSendBtn = document.getElementById('novaSendBtn');
+  const novaChips = document.getElementById('novaChips');
+  let novaHistory = [];
+  let novaBusy = false;
+
+  function novaEsc(s) {
+    return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+  function novaScroll() {
+    if (novaFeed) novaFeed.scrollTop = novaFeed.scrollHeight;
+  }
+  function novaAddUser(text) {
+    if (!novaFeed) return;
+    const el = document.createElement('div');
+    el.className = 'nova-msg user';
+    el.innerHTML = '<div class="nova-bubble">' + novaEsc(text) + '</div>';
+    novaFeed.appendChild(el);
+    novaScroll();
+  }
+  function novaAddCoach(html) {
+    if (!novaFeed) return null;
+    const el = document.createElement('div');
+    el.className = 'nova-msg nova';
+    el.innerHTML = '<div class="nova-bubble"><span class="nova-tag">Nova</span><div class="nova-text">' + html + '</div></div>';
+    novaFeed.appendChild(el);
+    novaScroll();
+    return el;
+  }
+
+  function novaFinanceSnapshot() {
+    const nw = {};
+    ['bank', 'stocks', 'crypto', 'other'].forEach(key => {
+      nw[key] = storeGet('nw:' + key) || [];
+    });
+    return {
+      netWorth: nw,
+      currency: storeGet(CURRENCY_KEY) || 'CHF',
+      subs: storeGet('subs') || [],
+      incomingOrders: storeGet('incoming_orders') || [],
+      wishlist: storeGet('wishlist') || []
+    };
+  }
+
+  async function novaAsk(text) {
+    text = (text || '').trim();
+    if (!text || novaBusy) return;
+    novaBusy = true;
+    if (novaSendBtn) novaSendBtn.disabled = true;
+    novaAddUser(text);
+    novaHistory.push({ role: 'user', content: text });
+    if (novaInput) { novaInput.value = ''; novaInput.style.height = 'auto'; }
+    const loading = novaAddCoach('<span class="nova-dots"><i></i><i></i><i></i></span>');
+    try {
+      const res = await fetch('/api/nova', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ messages: novaHistory, finance: novaFinanceSnapshot() })
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        const msg = (json && json.error) || 'Something went wrong — try again in a moment.';
+        if (loading) loading.querySelector('.nova-text').textContent = msg;
+      } else {
+        const reply = json.text || 'Hmm, no reply.';
+        novaHistory.push({ role: 'assistant', content: reply });
+        if (loading) loading.querySelector('.nova-text').textContent = reply;
+      }
+    } catch (e) {
+      if (loading) loading.querySelector('.nova-text').textContent = 'Could not reach Nova — check your connection and try again.';
+    }
+    novaScroll();
+    novaBusy = false;
+    if (novaSendBtn) novaSendBtn.disabled = false;
+  }
+
+  if (novaSendBtn) novaSendBtn.addEventListener('click', () => novaAsk(novaInput.value));
+  if (novaInput) {
+    novaInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); novaAsk(novaInput.value); }
+    });
+    novaInput.addEventListener('input', () => {
+      novaInput.style.height = 'auto';
+      novaInput.style.height = Math.min(novaInput.scrollHeight, 110) + 'px';
+    });
+  }
+  if (novaChips) {
+    novaChips.querySelectorAll('.nova-chip').forEach(btn => {
+      btn.addEventListener('click', () => novaAsk(btn.dataset.q));
+    });
+  }
+  novaAddCoach('Hey, I’m <b>Nova</b> — ask me anything about your net worth, subscriptions, orders, or wishlist and I’ll ground it in your real numbers.');
 
 })();
 </script>
