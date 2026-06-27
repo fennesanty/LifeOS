@@ -8,6 +8,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A1410">
 <title>Progressive Overload Coach</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 <script src="topbar.js" defer></script>
 
 <!-- =============================================================
@@ -3705,22 +3713,14 @@ img, video, canvas, svg { max-width: 100%; }
 <style>
   #nvFab {
     position: fixed; top: calc(env(safe-area-inset-top) + 56px); right: max(14px, env(safe-area-inset-right)); z-index: 60;
-    width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; padding: 0;
+    width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; padding: 0; overflow: hidden;
     -webkit-tap-highlight-color: transparent; transition: transform 0.12s;
-    background: radial-gradient(circle at 32% 28%, #eafff6, var(--good) 42%, #1f8f66 100%);
+    background: radial-gradient(circle at 50% 48%, #16291F 0%, rgba(18,35,28,0.45) 42%, rgba(10,20,16,0) 72%);
     box-shadow: 0 0 18px -2px var(--good), inset 0 -6px 14px rgba(0,0,0,0.25);
     animation: nvOrbFloat 4s ease-in-out infinite;
   }
   #nvFab:active { transform: scale(0.93); }
   #nvFab.think { animation: nvOrbFloat 1.1s ease-in-out infinite, nvOrbPulse 1.1s ease-in-out infinite; }
-  #nvFab.happy::before, #nvFab.happy::after { height: 4px; border-radius: 0 0 7px 7px; }
-  /* eyes */
-  #nvFab::before, #nvFab::after {
-    content: ''; position: absolute; top: 38%; width: 7px; height: 7px; border-radius: 50%;
-    background: #06281d; box-shadow: 0 0 5px rgba(0,0,0,0.4); transition: height 0.15s;
-  }
-  #nvFab::before { left: 30%; }
-  #nvFab::after { right: 30%; }
   @keyframes nvOrbFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
   @keyframes nvOrbPulse { 0%,100% { box-shadow: 0 0 18px -2px var(--good); } 50% { box-shadow: 0 0 26px 2px var(--good); } }
   #nvFab .nv-online { position: absolute; right: 1px; bottom: 1px; z-index: 2; width: 11px; height: 11px; border-radius: 50%; background: #6ee7b7; border: 2px solid #0a0a0b; box-shadow: 0 0 6px rgba(110,231,183,0.7); }
@@ -3733,12 +3733,9 @@ img, video, canvas, svg { max-width: 100%; }
   }
   #nvPanel.open { display: flex; }
   .nv-head { display: flex; align-items: center; gap: 9px; padding: 13px 14px; border-bottom: 1px solid rgba(255,255,255,0.07); }
-  .nv-head .nv-av { position: relative; width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
-    background: radial-gradient(circle at 32% 28%, #eafff6, var(--good) 42%, #1f8f66 100%);
+  .nv-head .nv-av { position: relative; width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    background: radial-gradient(circle at 50% 48%, #16291F 0%, rgba(18,35,28,0.45) 42%, rgba(10,20,16,0) 72%);
     box-shadow: 0 0 8px -1px var(--good); }
-  .nv-head .nv-av::before, .nv-head .nv-av::after { content: ''; position: absolute; top: 38%; width: 4px; height: 4px; border-radius: 50%; background: #06281d; }
-  .nv-head .nv-av::before { left: 27%; }
-  .nv-head .nv-av::after { right: 27%; }
   .nv-head .nv-name { font-size: 14px; font-weight: 700; color: #FAFAFA; }
   .nv-head .nv-sub { font-size: 10.5px; color: #76746E; }
   .nv-head .nv-x { margin-left: auto; border: 0; background: transparent; color: #76746E; font-size: 20px; cursor: pointer; line-height: 1; }
@@ -3761,7 +3758,7 @@ img, video, canvas, svg { max-width: 100%; }
 <button id="nvFab" type="button" aria-label="Open Nova coach"><span class="nv-online"></span></button>
 <div id="nvPanel" role="dialog" aria-label="Nova gym coach">
   <div class="nv-head">
-    <div class="nv-av"></div>
+    <div class="nv-av" id="nvAv"></div>
     <div><div class="nv-name">Nova</div><div class="nv-sub">your gym coach</div></div>
     <button class="nv-x" id="nvClose" type="button" aria-label="Close">×</button>
   </div>
@@ -3783,6 +3780,10 @@ img, video, canvas, svg { max-width: 100%; }
   const $ = (id) => document.getElementById(id);
   const fab = $('nvFab'), panel = $('nvPanel'), body = $('nvBody'), input = $('nvInput');
   let busy = false, greeted = false;
+  function setAvatar(state){
+    if (window.novaAvatarGymFab) window.novaAvatarGymFab.go(state);
+    if (window.novaAvatarGymHead) window.novaAvatarGymHead.go(state);
+  }
 
   function savedKey() { try { return localStorage.getItem(KEY_LS) || ''; } catch (e) { return ''; } }
 
@@ -3833,7 +3834,7 @@ img, video, canvas, svg { max-width: 100%; }
     const key = savedKey();
     addMsg('user', md(text));
     if (!key){ addMsg('coach', md("Paste your **NVIDIA API key** on the Nova page first (the Nova tile on the home screen) — it's saved in this browser and I'll use it here too.")); return; }
-    busy = true; fab.classList.add('think');
+    busy = true; fab.classList.add('think'); setAvatar('thinking');
     const loading = addMsg('coach', '<span class="nv-dots"><i></i><i></i><i></i></span>');
     try {
       const res = await fetch('/api/nova-proxy', {
@@ -3842,12 +3843,12 @@ img, video, canvas, svg { max-width: 100%; }
         body: JSON.stringify({ key, messages:[{role:'system', content: SYS + gymContext()}, {role:'user', content:text}] }),
       });
       const json = await res.json();
-      if (json.error){ loading.innerHTML = md('- ' + (json.error.message || 'Something went wrong — check your API key.')); fab.classList.remove('think'); busy=false; return; }
+      if (json.error){ loading.innerHTML = md('- ' + (json.error.message || 'Something went wrong — check your API key.')); fab.classList.remove('think'); setAvatar('idle'); busy=false; return; }
       const reply = json.text || 'Hmm, no reply.';
       loading.innerHTML = md(reply);
-      fab.classList.remove('think'); fab.classList.add('happy');
-      setTimeout(() => fab.classList.remove('happy'), 2500);
-    } catch(e){ loading.innerHTML = md('- Could not reach NVIDIA — check your connection and key.'); fab.classList.remove('think'); }
+      fab.classList.remove('think'); fab.classList.add('happy'); setAvatar('positive');
+      setTimeout(() => { fab.classList.remove('happy'); setAvatar('idle'); }, 2500);
+    } catch(e){ loading.innerHTML = md('- Could not reach NVIDIA — check your connection and key.'); fab.classList.remove('think'); setAvatar('idle'); }
     body.scrollTop = body.scrollHeight; busy = false;
   }
 
@@ -3864,6 +3865,14 @@ img, video, canvas, svg { max-width: 100%; }
   input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const t=input.value; input.value=''; ask(t); } });
   document.querySelectorAll('.nv-chip').forEach(c=> c.addEventListener('click', ()=> ask(c.getAttribute('data-q'))));
 })();
+</script>
+
+<script type="module">
+import { NovaAvatar } from './nova-avatar.js';
+const fabHost = document.getElementById('nvFab');
+const avHost = document.getElementById('nvAv');
+if (fabHost) window.novaAvatarGymFab = new NovaAvatar(fabHost);
+if (avHost) window.novaAvatarGymHead = new NovaAvatar(avHost);
 </script>
 
 </body>

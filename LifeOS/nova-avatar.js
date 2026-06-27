@@ -5,12 +5,12 @@
 // Falls back to a flat purple glyph (no WebGL) automatically.
 
 const STATES = {
-  idle:     { speed: 0.10, bob: 0.05, bloom: 0.80, emissive: 0.15, yOff: 0 },
-  asking:   { speed: 0.07, bob: 0.05, bloom: 0.90, emissive: 0.15, yOff: 0 },
-  positive: { speed: 0.16, bob: 0.08, bloom: 1.10, emissive: 0.22, yOff: 0 },
-  negative: { speed: 0.05, bob: 0.03, bloom: 0.50, emissive: 0.06, yOff: -0.04 },
-  thinking: { speed: 0.22, bob: 0.05, bloom: 0.85, emissive: 0.15, yOff: 0 },
-  speaking: { speed: 0.10, bob: 0.05, bloom: 0.95, emissive: 0.15, yOff: 0 },
+  idle:     { speed: 0.25, bob: 0.05, bloom: 0.45, emissive: 0.12, yOff: 0 },
+  asking:   { speed: 0.15, bob: 0.05, bloom: 0.50, emissive: 0.12, yOff: 0 },
+  positive: { speed: 0.40, bob: 0.08, bloom: 0.62, emissive: 0.18, yOff: 0 },
+  negative: { speed: 0.12, bob: 0.03, bloom: 0.28, emissive: 0.05, yOff: -0.04 },
+  thinking: { speed: 0.60, bob: 0.05, bloom: 0.48, emissive: 0.12, yOff: 0 },
+  speaking: { speed: 0.25, bob: 0.05, bloom: 0.52, emissive: 0.12, yOff: 0 },
 };
 
 const ease = (p) => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
@@ -46,7 +46,7 @@ export class NovaAvatar {
       const { OutputPass } = await import('three/addons/postprocessing/OutputPass.js');
       const { RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js');
       this._build(THREE, { EffectComposer, RenderPass, UnrealBloomPass, OutputPass, RoomEnvironment });
-      this.anim = { speed: 0.10, bob: 0.05, bloom: 0.80, yOff: 0, emissive: 0.15, color: new THREE.Color(0x9A8AE6) };
+      this.anim = { speed: 0.25, bob: 0.05, bloom: 0.45, yOff: 0, emissive: 0.12, color: new THREE.Color(0x9A8AE6) };
       this.glyphDrawState = 'idle';
       this._applyImmediate('idle');
       this._loop();
@@ -111,12 +111,12 @@ export class NovaAvatar {
 
     const geo = new THREE.DodecahedronGeometry(1, 0);
     const mat = this.mat = new THREE.MeshPhysicalMaterial({
-      color: 0x9A8AE6, roughness: 0.28, metalness: 0.0,
-      transmission: 0.55, thickness: 1.2, ior: 1.45,
-      clearcoat: 0.6, clearcoatRoughness: 0.25,
+      color: 0x9A8AE6, roughness: 0.42, metalness: 0.0,
+      transmission: 0.5, thickness: 1.2, ior: 1.45,
+      clearcoat: 0.12,
       attenuationColor: new THREE.Color(0x6450C6), attenuationDistance: 1.5,
-      iridescence: 0.2, emissive: new THREE.Color(0x3A2F8C), emissiveIntensity: 0.15,
-      transparent: true, opacity: 0.96, envMapIntensity: 1.0,
+      emissive: new THREE.Color(0x3A2F8C), emissiveIntensity: 0.12,
+      transparent: true, opacity: 0.97, envMapIntensity: 1.0,
     });
     const crystal = new THREE.Mesh(geo, mat);
     body.add(crystal);
@@ -125,15 +125,15 @@ export class NovaAvatar {
     const edgeMat = new THREE.LineBasicMaterial({ color: 0xE4DFFB, transparent: true, opacity: 0.35 });
     body.add(new THREE.LineSegments(edges, edgeMat));
 
-    const coreMat = new THREE.MeshBasicMaterial({ color: 0x7E68F0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0x7E68F0, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false });
     body.add(new THREE.Mesh(new THREE.DodecahedronGeometry(0.55, 0), coreMat));
     const inner = new THREE.PointLight(0x7E68F0, 0.6, 6); body.add(inner);
 
-    const key = new THREE.DirectionalLight(0xFFFFFF, 1.6); key.position.set(-3, 4, 4); scene.add(key);
-    const rim = new THREE.DirectionalLight(0x8E7BFF, 1.0); rim.position.set(2, -1, -3); scene.add(rim);
-    scene.add(new THREE.HemisphereLight(0xB9B0FF, 0x1A1530, 0.5));
+    const key = new THREE.DirectionalLight(0xFFFFFF, 0.75); key.position.set(-3, 4, 4); scene.add(key);
+    const rim = new THREE.DirectionalLight(0x8E7BFF, 0.5); rim.position.set(2, -1, -3); scene.add(rim);
+    scene.add(new THREE.HemisphereLight(0xC4BCFF, 0x241B45, 0.85));
 
-    // glyph plane — billboarded, independent of crystal rotation
+    // glyph plane — child of body, so it sways with the crystal
     const cv = this.gcanvas = document.createElement('canvas'); cv.width = cv.height = 512;
     this.gctx = cv.getContext('2d');
     const tex = this.glyphTex = new THREE.CanvasTexture(cv);
@@ -141,13 +141,13 @@ export class NovaAvatar {
     // NormalBlending + a glyph color kept below the bloom threshold (fix #1: no halo)
     const gMat = this.glyphMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false, blending: THREE.NormalBlending, toneMapped: false, opacity: 1 });
     const gPlane = this.glyphPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), gMat);
-    gPlane.position.set(0, 0, 0.15);
+    gPlane.position.set(0.44, 0, 0.82);
     gPlane.renderOrder = 10;
-    scene.add(gPlane);
+    body.add(gPlane);
 
     const composer = this.composer = new A.EffectComposer(renderer);
     composer.addPass(new A.RenderPass(scene, camera));
-    const bloom = this.bloom = new A.UnrealBloomPass(new THREE.Vector2(w, h), 0.8, 0.6, 0.85);
+    const bloom = this.bloom = new A.UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.55, 0.92);
     composer.addPass(bloom);
     composer.addPass(new A.OutputPass());
     this._resize(w, h);
@@ -226,7 +226,7 @@ export class NovaAvatar {
     this.bloom.strength = this.anim.bloom;
 
     // body motion — fix #3: a gentle bounded sway instead of a full continuous spin
-    this.body.rotation.y = R ? 0 : Math.sin(this.clock * this.anim.speed * 1.6) * 0.35;
+    this.body.rotation.y = R ? 0 : Math.sin(this.clock * this.anim.speed * 2) * 0.39;
     this.body.rotation.x = R ? 0 : Math.sin(this.clock / 6 * Math.PI * 2) * 0.08;
     this.curTiltZ += (this.tiltTarget - this.curTiltZ) * Math.min(dt * 6, 1);
     this.body.rotation.z = this.curTiltZ;
@@ -251,8 +251,6 @@ export class NovaAvatar {
     }
     this.glyphMat.opacity = gOp;
     this.glyphPlane.scale.setScalar(gScale);
-    this.glyphPlane.position.set(0, (R ? 0 : bob) + this.anim.yOff, 0.15);
-    this.glyphPlane.lookAt(this.camera.position);
 
     const ds = this.glyphDrawState;
     if (ds === 'thinking' || ds === 'speaking' || this.glyphFadeStart != null || !this.glyphDrawn) {
@@ -270,7 +268,7 @@ export class NovaAvatar {
     ctx.clearRect(0, 0, S, S);
     ctx.lineWidth = 26; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     // fix #1: a muted color that stays under the bloom threshold — no halo
-    ctx.strokeStyle = '#9A8AE6'; ctx.fillStyle = '#9A8AE6';
+    ctx.strokeStyle = '#D7D0F2'; ctx.fillStyle = '#D7D0F2';
     ctx.shadowBlur = 0; ctx.globalAlpha = 1;
 
     if (state === 'idle') {
