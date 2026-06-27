@@ -145,7 +145,7 @@ img, video, canvas, svg { max-width: 100%; }
   z-index: 50;
   display: flex;
   justify-content: center;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   background: linear-gradient(180deg, rgba(10,10,11,0) 0%, rgba(10,10,11,0.78) 38%, rgba(10,10,11,0.94) 100%);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -3528,7 +3528,7 @@ img, video, canvas, svg { max-width: 100%; }
 <!-- ===== Nova gym coach (top-right avatar, bring-your-own NVIDIA key) ===== -->
 <style>
   #nvFab {
-    position: fixed; top: calc(env(safe-area-inset-top) + 56px); right: 14px; z-index: 60;
+    position: fixed; top: calc(env(safe-area-inset-top) + 56px); right: max(14px, env(safe-area-inset-right)); z-index: 60;
     width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; padding: 0;
     -webkit-tap-highlight-color: transparent; transition: transform 0.12s;
     background: radial-gradient(circle at 32% 28%, #eafff6, var(--good) 42%, #1f8f66 100%);
@@ -3549,8 +3549,8 @@ img, video, canvas, svg { max-width: 100%; }
   @keyframes nvOrbPulse { 0%,100% { box-shadow: 0 0 18px -2px var(--good); } 50% { box-shadow: 0 0 26px 2px var(--good); } }
   #nvFab .nv-online { position: absolute; right: 1px; bottom: 1px; z-index: 2; width: 11px; height: 11px; border-radius: 50%; background: #6ee7b7; border: 2px solid #0a0a0b; box-shadow: 0 0 6px rgba(110,231,183,0.7); }
   #nvPanel {
-    position: fixed; top: calc(env(safe-area-inset-top) + 110px); right: 14px; z-index: 60;
-    width: min(340px, calc(100vw - 28px)); max-height: 66vh; display: none; flex-direction: column;
+    position: fixed; top: calc(env(safe-area-inset-top) + 110px); right: max(14px, env(safe-area-inset-right)); z-index: 60;
+    width: min(340px, calc(100vw - 28px - env(safe-area-inset-right))); max-height: 66vh; display: none; flex-direction: column;
     background: #111016; border: 1px solid rgba(255,255,255,0.10); border-radius: 18px;
     box-shadow: 0 24px 70px rgba(0,0,0,0.65); overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
