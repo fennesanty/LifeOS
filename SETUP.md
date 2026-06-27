@@ -98,14 +98,17 @@ Replace the old URL/key in these files:
 
 ---
 
-## 4. Nova (AI mentor / gym coach) — optional
+## 4. Nova / AI features — optional
 
-Runs on NVIDIA's NIM API (model `moonshotai/kimi-k2.6`). Each user **pastes their own
-NVIDIA API key** on the **Nova** tile and the gym coach; it's stored only in their browser
-and sent straight to NVIDIA. Get a key at build.nvidia.com/moonshotai/kimi-k2.6.
+All AI features run on NVIDIA's NIM API (model `moonshotai/kimi-k2.6`):
 
-The Finance page's Nova chat is separate: it calls `/api/nova` server-side, so add this in
-Vercel → **Settings → Environment Variables**, then redeploy:
+- **Nova tile, gym coach, and the ✨ Polish button** (Main page) share one
+  **NVIDIA API key** pasted on the **Nova** tile; it's stored only in your browser and
+  relayed to NVIDIA through `/api/nova-proxy` (NVIDIA doesn't support direct browser CORS).
+  Get a key at build.nvidia.com/moonshotai/kimi-k2.6.
+- **Finance page's Nova chat** and the **Scan Anything** receipt importer run server-side
+  (`/api/nova` and `/api/receipt`), so add this in Vercel → **Settings → Environment
+  Variables**, then redeploy:
 
 | Variable | Value |
 |---|---|

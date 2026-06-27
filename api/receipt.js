@@ -1,59 +1,62 @@
 // ============================================================
 // POST /api/receipt
 // Body: { image: base64, mediaType: "image/jpeg" | ... }
-// Calls Claude's vision model with FORCED tool use so it always
-// returns clean structured JSON describing the financial image
-// (a balance screen, a receipt, an invoice, a transaction list…).
-// ANTHROPIC_API_KEY stays server-side only.
+// Calls NVIDIA NIM's vision model (moonshotai/kimi-k2.6) with FORCED
+// tool use so it always returns clean structured JSON describing the
+// financial image (a balance screen, a receipt, an invoice, a
+// transaction list…). NVIDIA_API_KEY stays server-side only.
 // ============================================================
 
-const TOOL = {
-  name: 'read_finance_image',
-  description: 'Report the financial data extracted from an image — a receipt, bill, invoice, bank/fintech app screenshot, account balance, statement, or transaction list.',
-  input_schema: {
-    type: 'object',
-    properties: {
-      readable: {
-        type: 'boolean',
-        description: 'false ONLY if there is no monetary amount anywhere in the image. True for any image with a discernible amount, even a screenshot.'
-      },
-      kind: {
-        type: 'string',
-        enum: ['balance', 'expense', 'income', 'other'],
-        description: 'balance = a bank/fintech app balance screen or statement; expense = a receipt, bill, or purchase; income = an incoming payment or payslip; other = anything else with a number.'
-      },
-      source: {
-        type: 'string',
-        description: 'The bank/app name for a balance (e.g. "Revolut", "Wise", "N26"), or the merchant name for a purchase (e.g. "Migros"). Best guess if unclear.'
-      },
-      currency: {
-        type: 'string',
-        description: 'ISO 4217 currency code, inferred from symbols/abbreviations (Fr or CHF -> CHF, $ -> USD, EUR or € -> EUR, £ -> GBP). Default to CHF if it cannot be determined.'
-      },
-      amount: {
-        type: 'number',
-        description: 'The single headline figure as a plain positive number, no currency symbols or thousands separators (e.g. "Fr 199.54" -> 199.54). The balance on a banking screen, or the total on a receipt.'
-      },
-      date: {
-        type: 'string',
-        description: 'The date on the document as YYYY-MM-DD, or "" if not present/unclear.'
-      },
-      items: {
-        type: 'array',
-        description: 'Best-effort line items / transactions found in the image, if any.',
+const TOOLS = [{
+  type: 'function',
+  function: {
+    name: 'read_finance_image',
+    description: 'Report the financial data extracted from an image — a receipt, bill, invoice, bank/fintech app screenshot, account balance, statement, or transaction list.',
+    parameters: {
+      type: 'object',
+      properties: {
+        readable: {
+          type: 'boolean',
+          description: 'false ONLY if there is no monetary amount anywhere in the image. True for any image with a discernible amount, even a screenshot.'
+        },
+        kind: {
+          type: 'string',
+          enum: ['balance', 'expense', 'income', 'other'],
+          description: 'balance = a bank/fintech app balance screen or statement; expense = a receipt, bill, or purchase; income = an incoming payment or payslip; other = anything else with a number.'
+        },
+        source: {
+          type: 'string',
+          description: 'The bank/app name for a balance (e.g. "Revolut", "Wise", "N26"), or the merchant name for a purchase (e.g. "Migros"). Best guess if unclear.'
+        },
+        currency: {
+          type: 'string',
+          description: 'ISO 4217 currency code, inferred from symbols/abbreviations (Fr or CHF -> CHF, $ -> USD, EUR or € -> EUR, £ -> GBP). Default to CHF if it cannot be determined.'
+        },
+        amount: {
+          type: 'number',
+          description: 'The single headline figure as a plain positive number, no currency symbols or thousands separators (e.g. "Fr 199.54" -> 199.54). The balance on a banking screen, or the total on a receipt.'
+        },
+        date: {
+          type: 'string',
+          description: 'The date on the document as YYYY-MM-DD, or "" if not present/unclear.'
+        },
         items: {
-          type: 'object',
-          properties: {
-            name: { type: 'string' },
-            amount: { type: 'number' }
-          },
-          required: ['name', 'amount']
+          type: 'array',
+          description: 'Best-effort line items / transactions found in the image, if any.',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              amount: { type: 'number' }
+            },
+            required: ['name', 'amount']
+          }
         }
-      }
-    },
-    required: ['readable', 'kind', 'source', 'currency', 'amount', 'date', 'items']
+      },
+      required: ['readable', 'kind', 'source', 'currency', 'amount', 'date', 'items']
+    }
   }
-};
+}];
 
 const SYSTEM =
   'You read images of receipts, bills, invoices, bank or fintech app screenshots, account balances, ' +
@@ -79,8 +82,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'method not allowed' });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not configured on the server' });
+  const apiKey = process.env.NVIDIA_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'NVIDIA_API_KEY is not configured on the server' });
 
   const body = req.body || {};
   const image = body.image;
@@ -88,36 +91,40 @@ export default async function handler(req, res) {
   if (!image) return res.status(400).json({ error: 'image (base64) required' });
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'authorization': 'Bearer ' + apiKey,
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-8',
+        model: 'moonshotai/kimi-k2.6',
         max_tokens: 1024,
-        system: SYSTEM,
-        tools: [TOOL],
-        tool_choice: { type: 'tool', name: 'read_finance_image' },
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
-            { type: 'text', text: 'Extract the financial data from this image and report it with the read_finance_image tool.' }
-          ]
-        }],
+        messages: [
+          { role: 'system', content: SYSTEM },
+          {
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: 'data:' + mediaType + ';base64,' + image } },
+              { type: 'text', text: 'Extract the financial data from this image and report it with the read_finance_image tool.' }
+            ]
+          }
+        ],
+        tools: TOOLS,
+        tool_choice: { type: 'function', function: { name: 'read_finance_image' } },
       }),
     });
     const json = await r.json();
     if (!r.ok) {
-      return res.status(r.status).json({ error: (json.error && json.error.message) || 'Anthropic API error' });
+      return res.status(r.status).json({ error: (json.error && json.error.message) || 'NVIDIA API error' });
     }
-    const toolUse = (json.content || []).find(b => b.type === 'tool_use' && b.name === 'read_finance_image');
-    if (!toolUse) return res.status(502).json({ error: 'Model did not return structured data' });
-    return res.status(200).json(toolUse.input);
+    const message = json.choices && json.choices[0] && json.choices[0].message;
+    const toolCall = message && message.tool_calls && message.tool_calls.find(t => t.function && t.function.name === 'read_finance_image');
+    if (!toolCall) return res.status(502).json({ error: 'Model did not return structured data' });
+    let parsed;
+    try { parsed = JSON.parse(toolCall.function.arguments); } catch (e) { return res.status(502).json({ error: 'Model returned invalid JSON' }); }
+    return res.status(200).json(parsed);
   } catch (e) {
-    return res.status(500).json({ error: 'request to Anthropic failed: ' + (e && e.message ? e.message : String(e)) });
+    return res.status(500).json({ error: 'request to NVIDIA failed: ' + (e && e.message ? e.message : String(e)) });
   }
 }
