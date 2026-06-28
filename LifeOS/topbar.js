@@ -22,13 +22,29 @@
   // -------- CSS --------
   const css = `
 .topbar {
-  position: sticky; top: 0; z-index: 40;
+  position: sticky; top: max(10px, env(safe-area-inset-top)); z-index: 40;
   display: flex; justify-content: flex-end; align-items: center;
   gap: 8px;
-  padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 8px max(14px, env(safe-area-inset-left));
-  background: #0a0a0b;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin: 0 max(10px, env(safe-area-inset-right)) 14px max(10px, env(safe-area-inset-left));
+  padding: 9px 11px;
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(124,239,185,0.08), rgba(8,14,12,0.55));
+  border: 1px solid rgba(255,255,255,0.13);
+  border-top-color: rgba(255,255,255,0.28);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(0,0,0,0.20),
+    0 10px 30px rgba(0,0,0,0.40);
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  isolation: isolate;
+  overflow: hidden;
+}
+.topbar::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(ellipse 140% 70% at 25% -20%, rgba(255,255,255,0.18), transparent 60%);
+  mix-blend-mode: screen; pointer-events: none;
 }
 .topbar-water-wrap {
   display: flex; align-items: stretch;
@@ -96,26 +112,43 @@
 }
 .topbar-finance-icon svg { width: 19px; height: 19px; }
 
-/* Bottom tab bar — Instagram-style */
+/* Bottom tab bar — floating liquid glass pill */
 .bottombar {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+  position: fixed; left: max(14px, env(safe-area-inset-left)); right: max(14px, env(safe-area-inset-right));
+  bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40;
   display: flex; justify-content: space-around; align-items: stretch;
-  padding: 6px max(0px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(0px, env(safe-area-inset-left));
-  background: #0a0a0b;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 7px 6px;
+  border-radius: 22px;
+  background: linear-gradient(165deg, rgba(124,239,185,0.10), rgba(8,14,12,0.58));
+  border: 1px solid rgba(255,255,255,0.14);
+  border-top-color: rgba(255,255,255,0.30);
+  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.25),
+    0 14px 38px rgba(0,0,0,0.50);
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  isolation: isolate;
+  overflow: hidden;
+}
+.bottombar::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(ellipse 140% 60% at 30% -20%, rgba(255,255,255,0.20), transparent 62%);
+  mix-blend-mode: screen; pointer-events: none;
 }
 .bottombar-tab {
-  flex: 1;
+  flex: 1; position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 3px;
-  padding: 6px 0 4px;
+  padding: 7px 0 5px;
+  border-radius: 16px;
   text-decoration: none;
   color: rgba(255, 255, 255, 0.45);
   font-size: 10px; font-weight: 600;
   letter-spacing: 0.04em;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s;
+  transition: color 0.15s, background 0.15s;
 }
 .bottombar-tab-icon {
   display: inline-flex; line-height: 1; color: #FAFAFA;
@@ -124,16 +157,18 @@
 }
 .bottombar-tab-icon svg { width: 22px; height: 22px; }
 .bottombar-tab.active {
-  color: #FAFAFA;
+  color: #7CEFB9;
+  background: rgba(124, 239, 185, 0.10);
 }
 .bottombar-tab.active .bottombar-tab-icon {
-  opacity: 1;
+  opacity: 1; color: #7CEFB9;
+  filter: drop-shadow(0 0 6px rgba(124,239,185,0.55));
 }
 .bottombar-tab:active .bottombar-tab-icon { transform: scale(0.92); }
 
-/* Push page content above the fixed bottom bar */
+/* Push page content above the floating bottom bar */
 body.has-bottombar {
-  padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
 }
 
 @media (max-width: 480px) {
