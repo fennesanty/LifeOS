@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="lock.js"></script>
+<script src="/api/config"></script>
+<link rel="stylesheet" href="theme.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1410">
+<title>Hustle · Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<style>
+:root {
+  --bg-deep: #0A1410;
+  --text-primary: #EAEFEA;
+  --text-secondary: #9fb3a9;
+  --text-tertiary: #6E827A;
+  --good: #7CEFB9;
+  --warn: #F2C063;
+  --bad: #FF8A8A;
+  --line: rgba(124,239,185,0.16);
+  --line-soft: rgba(124,239,185,0.10);
+  --line-strong: rgba(124,239,185,0.35);
+  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: #0A1410;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 18px 60px;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 82% 14%, rgba(124,239,185,0.14), transparent 45%),
+    radial-gradient(circle at 18% 90%, rgba(124,239,185,0.06), transparent 50%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: -2;
+  animation: drift 36s ease-in-out infinite alternate;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(124,239,185,0.02) 1px, transparent 1px);
+  background-size: 3px 3px;
+  pointer-events: none;
+  z-index: -1;
+}
+@keyframes drift { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-22px,14px,0); } }
+
+.page { max-width: 880px; margin: 0 auto; }
+.dash-title {
+  margin: 0 0 4px;
+  font-size: 28px; font-weight: 700; letter-spacing: -0.025em;
+  background: linear-gradient(180deg, #FFFFFF 0%, #C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.dash-sub {
+  font-family: var(--font-display); font-style: italic; font-weight: 500;
+  font-size: 14px; color: var(--text-secondary); margin: 0 0 22px;
+}
+@media (max-width: 480px) { .dash-title { font-size: 22px; } }
+
+.section { margin-top: 26px; }
+.sl-hint { font-size: 10.5px; color: var(--text-tertiary); font-style: italic; margin-top: -8px; margin-bottom: 12px; }
+
+.card {
+  position: relative;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px; padding: 18px;
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+}
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.stat { background: rgba(255,255,255,0.03); border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px; }
+.stat-num { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); line-height: 1; }
+.stat-num.good { color: var(--good); }
+.stat-num.bad { color: var(--bad); }
+.stat-label { margin-top: 5px; font-size: 9.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); }
+
+.row-list { list-style: none; margin: 0 0 12px; padding: 0; max-height: 260px; overflow-y: auto; }
+.row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--line-soft); border-radius: 11px; font-size: 13px; }
+.row-main { flex: 1; min-width: 0; color: var(--text-primary); }
+.row-sub { font-size: 10.5px; color: var(--text-tertiary); }
+.row-amt { font-family: var(--font-mono); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.row-amt.in { color: var(--good); }
+.row-amt.out { color: var(--bad); }
+.row-del { border: 0; background: transparent; color: var(--text-tertiary); font-size: 17px; cursor: pointer; opacity: 0.5; padding: 0 2px; line-height: 1; }
+.row-del:hover { opacity: 1; color: var(--bad); }
+.empty { text-align: center; font-size: 12px; font-style: italic; color: var(--text-tertiary); padding: 14px 0; }
+
+.form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.in {
+  flex: 1; min-width: 90px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: rgba(0,0,0,0.25); color: var(--text-primary);
+  font-family: inherit; font-size: 13px; outline: none;
+}
+.in::placeholder { color: var(--text-tertiary); }
+.in:focus { border-color: var(--line-strong); }
+select.in { cursor: pointer; }
+.btn {
+  padding: 10px 16px; border: 0; border-radius: 10px;
+  font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.btn-primary { background: var(--good); color: var(--bg-deep); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost { background: rgba(124,239,185,0.06); border: 1px solid var(--line); color: var(--text-primary); }
+.btn-ghost:hover { border-color: var(--line-strong); }
+
+.bar-track { height: 9px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, var(--good), #5fd9a0); border-radius: 99px; transition: width 0.3s; }
+.bar-fill.warn { background: linear-gradient(90deg, var(--warn), #e0a83f); }
+.bar-fill.bad { background: linear-gradient(90deg, var(--bad), #e06a6a); }
+
+.goal-card { padding: 13px 14px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border: 1px solid var(--line-soft); border-radius: 12px; }
+.goal-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; gap: 8px; }
+.goal-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.goal-amt { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-tertiary); white-space: nowrap; }
+.goal-actions { display: flex; gap: 6px; margin-top: 8px; }
+.mini-btn { padding: 5px 10px; font-size: 11px; border-radius: 8px; border: 1px solid var(--line); background: rgba(124,239,185,0.05); color: var(--text-secondary); cursor: pointer; }
+.mini-btn:hover { border-color: var(--line-strong); color: var(--text-primary); }
+
+.balance-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.balance-label { width: 90px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; }
+.balance-row .in { max-width: 70px; flex: 0 0 auto; }
+.balance-pct { width: 42px; text-align: right; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; }
+.stack-bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; margin-bottom: 16px; background: rgba(255,255,255,0.06); }
+.stack-seg { height: 100%; transition: width 0.3s; }
+
+.calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
+
+/* ===== Trophy Wall — real circular medal badges ===== */
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); gap: 16px 10px; }
+.badge { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.badge-medal {
+  position: relative;
+  width: 62px; height: 62px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--line-soft);
+  background: rgba(255,255,255,0.025);
+  color: var(--text-tertiary);
+  transition: border-color 0.2s, box-shadow 0.2s, color 0.2s, background 0.2s;
+}
+.badge-medal svg { width: 26px; height: 26px; }
+.badge.unlocked .badge-medal {
+  border-color: var(--good);
+  background: radial-gradient(circle at 35% 30%, rgba(124,239,185,0.38), rgba(124,239,185,0.06));
+  color: var(--good);
+  box-shadow: 0 0 0 4px rgba(124,239,185,0.08), 0 0 20px rgba(124,239,185,0.40);
+}
+.badge-lock {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #0A1410; border: 1px solid var(--line-soft);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-tertiary);
+}
+.badge-lock svg { width: 9px; height: 9px; }
+.badge.unlocked .badge-lock { display: none; }
+.badge-name { font-size: 11px; font-weight: 700; color: var(--text-tertiary); line-height: 1.25; }
+.badge.unlocked .badge-name { color: var(--text-primary); }
+.badge-desc { font-size: 9.5px; color: var(--text-tertiary); line-height: 1.3; }
+
+@media (max-width: 480px) {
+  .card { padding: 14px; }
+  .balance-label { width: 76px; font-size: 10.5px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1 class="dash-title">Hustle</h1>
+  <p class="dash-sub">Basketbal en je eigen business, op één plek</p>
+
+  <!-- 01 — HUSTLE LEDGER -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">01</span><span class="sl-text">Hustle Ledger</span></div>
+    <div class="sl-hint">Inkomsten en uitgaven van je eigen "bedrijf".</div>
+    <div class="card">
+      <div class="stat-grid" id="ledgerStats"></div>
+      <ul class="row-list" id="ledgerList"></ul>
+      <div class="form-row">
+        <input class="in" id="ledgerDesc" type="text" placeholder="Waarvoor? (bv. 3 armbandjes verkocht)">
+        <input class="in" id="ledgerAmt" type="number" step="0.01" placeholder="€ bedrag" style="max-width:110px">
+        <select class="in" id="ledgerType" style="max-width:120px">
+          <option value="in">Inkomst</option>
+          <option value="out">Uitgave</option>
+        </select>
+        <button class="btn btn-primary" id="ledgerAdd">Toevoegen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 — SAVINGS GOALS -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">02</span><span class="sl-text">Spaarpotjes</span></div>
+    <div class="sl-hint">Sparen voor schoenen, materiaal, of een investering in je business.</div>
+    <div class="card">
+      <div id="goalList"></div>
+      <div class="form-row">
+        <input class="in" id="goalName" type="text" placeholder="Waarvoor spaar je?">
+        <input class="in" id="goalTarget" type="number" step="0.01" placeholder="€ doel" style="max-width:110px">
+        <button class="btn btn-primary" id="goalAdd">Potje maken</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 — SHOT TRACKER -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">03</span><span class="sl-text">Shot Tracker</span></div>
+    <div class="sl-hint">Log elke training: hoeveel schoten raak je per oefening.</div>
+    <div class="card">
+      <div class="stat-grid" id="shotStats"></div>
+      <ul class="row-list" id="shotList"></ul>
+      <div class="form-row">
+        <input class="in" id="shotDrill" type="text" placeholder="Oefening (bv. vrije worpen)">
+        <input class="in" id="shotMakes" type="number" placeholder="Geraakt" style="max-width:90px">
+        <input class="in" id="shotAttempts" type="number" placeholder="Geprobeerd" style="max-width:90px">
+        <button class="btn btn-primary" id="shotAdd">Loggen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 — PROFIT GOAL -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">04</span><span class="sl-text">Profit Goal</span></div>
+    <div class="sl-hint">Maandwinst uit je Hustle Ledger, vergeleken met je eigen doel.</div>
+    <div class="card">
+      <div class="stat-grid" id="profitStats"></div>
+      <div class="bar-track" style="margin-bottom:14px"><div class="bar-fill" id="profitBar" style="width:0%"></div></div>
+      <div class="form-row">
+        <input class="in" id="profitTarget" type="number" step="0.01" placeholder="€ doel deze maand" style="max-width:160px">
+        <button class="btn btn-ghost" id="profitSave">Doel opslaan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 — BALANCE METER -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">05</span><span class="sl-text">Balance Meter</span></div>
+    <div class="sl-hint">Hoeveel uur ging deze week naar ballen, business, en de rest?</div>
+    <div class="card">
+      <div class="stack-bar" id="balanceBar"></div>
+      <div class="balance-row"><span class="balance-label">Basketbal</span><input class="in" id="balBall" type="number" min="0" placeholder="uur"><span class="balance-pct" id="balBallPct">0%</span></div>
+      <div class="balance-row"><span class="balance-label">Business</span><input class="in" id="balBiz" type="number" min="0" placeholder="uur"><span class="balance-pct" id="balBizPct">0%</span></div>
+      <div class="balance-row"><span class="balance-label">School/rust</span><input class="in" id="balRest" type="number" min="0" placeholder="uur"><span class="balance-pct" id="balRestPct">0%</span></div>
+    </div>
+  </div>
+
+  <!-- 06 — PRICE CALCULATOR -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">06</span><span class="sl-text">Price Calculator</span></div>
+    <div class="sl-hint">Kostprijs + gewenste winstmarge = verkoopprijs. Geen giswerk meer.</div>
+    <div class="card">
+      <div class="calc-grid">
+        <input class="in" id="calcCost" type="number" step="0.01" placeholder="Kostprijs €">
+        <input class="in" id="calcMargin" type="number" step="1" placeholder="Marge % (bv. 40)">
+        <input class="in" id="calcQty" type="number" step="1" placeholder="Aantal stuks">
+      </div>
+      <div class="stat-grid" id="calcOut"></div>
+    </div>
+  </div>
+
+  <!-- 07 — TROPHY WALL -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">07</span><span class="sl-text">Trophy Wall</span></div>
+    <div class="sl-hint">Echte badges, automatisch unlocked op basis van wat hierboven staat.</div>
+    <div class="card">
+      <div class="badge-grid" id="badgeGrid"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ---- shared helpers, isolated under the "hustle:" prefix ---- */
+function load(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v === null || v === undefined ? fallback : v; }
+  catch (e) { return fallback; }
+}
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function euro(n) { return '€' + (Math.round((n || 0) * 100) / 100).toFixed(2); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function monthStr() { return new Date().toISOString().slice(0, 7); }
+
+/* =================================================================
+   01 — HUSTLE LEDGER
+   ================================================================= */
+(function () {
+  const K = 'hustle:ledger';
+  const list = document.getElementById('ledgerList');
+  const stats = document.getElementById('ledgerStats');
+
+  function render() {
+    const items = load(K, []);
+    const income = items.filter(i => i.type === 'in').reduce((a, b) => a + b.amount, 0);
+    const expense = items.filter(i => i.type === 'out').reduce((a, b) => a + b.amount, 0);
+    stats.innerHTML =
+      '<div class="stat"><div class="stat-num good">' + euro(income) + '</div><div class="stat-label">Inkomsten</div></div>' +
+      '<div class="stat"><div class="stat-num bad">' + euro(expense) + '</div><div class="stat-label">Uitgaven</div></div>' +
+      '<div class="stat"><div class="stat-num">' + euro(income - expense) + '</div><div class="stat-label">Saldo</div></div>';
+
+    list.innerHTML = '';
+    if (items.length === 0) { list.innerHTML = '<li class="empty">Nog niets geboekt.</li>'; return; }
+    items.slice().reverse().forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'row';
+      li.innerHTML =
+        '<div class="row-main">' + item.desc + '<div class="row-sub">' + item.date + '</div></div>' +
+        '<div class="row-amt ' + item.type + '">' + (item.type === 'in' ? '+' : '-') + euro(item.amount) + '</div>' +
+        '<button class="row-del" data-id="' + item.id + '">×</button>';
+      list.appendChild(li);
+    });
+    list.querySelectorAll('.row-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        save(K, load(K, []).filter(i => i.id !== btn.dataset.id));
+        render(); window.dispatchEvent(new Event('hustle:refresh'));
+      });
+    });
+  }
+
+  document.getElementById('ledgerAdd').addEventListener('click', () => {
+    const desc = document.getElementById('ledgerDesc').value.trim();
+    const amt = parseFloat(document.getElementById('ledgerAmt').value);
+    const type = document.getElementById('ledgerType').value;
+    if (!desc || !amt || amt <= 0) return;
+    const items = load(K, []);
+    items.push({ id: uid(), desc, amount: amt, type, date: todayStr() });
+    save(K, items);
+    document.getElementById('ledgerDesc').value = '';
+    document.getElementById('ledgerAmt').value = '';
+    render();
+    window.dispatchEvent(new Event('hustle:refresh'));
+  });
+
+  render();
+  window.addEventListener('hustle:refresh', render);
+})();
+
+/* =================================================================
+   02 — SAVINGS GOALS
+   ================================================================= */
+(function () {
+  const K = 'hustle:goals';
+  const wrap = document.getElementById('goalList');
+
+  function render() {
+    const goals = load(K, []);
+    wrap.innerHTML = '';
+    if (goals.length === 0) { wrap.innerHTML = '<div class="empty">Nog geen spaarpotje.</div>'; return; }
+    goals.forEach(g => {
+      const pct = g.target > 0 ? Math.min(100, Math.round((g.saved / g.target) * 100)) : 0;
+      const div = document.createElement('div');
+      div.className = 'goal-card';
+      div.innerHTML =
+        '<div class="goal-top"><span class="goal-name">' + g.name + '</span><span class="goal-amt">' + euro(g.saved) + ' / ' + euro(g.target) + '</span></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="goal-actions">' +
+        '<button class="mini-btn" data-act="add" data-id="' + g.id + '">+ geld toevoegen</button>' +
+        '<button class="mini-btn" data-act="del" data-id="' + g.id + '">verwijderen</button>' +
+        '</div>';
+      wrap.appendChild(div);
+    });
+    wrap.querySelectorAll('[data-act="add"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const amt = parseFloat(prompt('Hoeveel euro toevoegen?', '5'));
+        if (!amt || amt <= 0) return;
+        const goals = load(K, []);
+        const g = goals.find(x => x.id === btn.dataset.id);
+        if (g) { g.saved += amt; save(K, goals); render(); window.dispatchEvent(new Event('hustle:refresh')); }
+      });
+    });
+    wrap.querySelectorAll('[data-act="del"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        save(K, load(K, []).filter(x => x.id !== btn.dataset.id));
+        render(); window.dispatchEvent(new Event('hustle:refresh'));
+      });
+    });
+  }
+
+  document.getElementById('goalAdd').addEventListener('click', () => {
+    const name = document.getElementById('goalName').value.trim();
+    const target = parseFloat(document.getElementById('goalTarget').value);
+    if (!name || !target || target <= 0) return;
+    const goals = load(K, []);
+    goals.push({ id: uid(), name, target, saved: 0 });
+    save(K, goals);
+    document.getElementById('goalName').value = '';
+    document.getElementById('goalTarget').value = '';
+    render();
+    window.dispatchEvent(new Event('hustle:refresh'));
+  });
+
+  render();
+  window.addEventListener('hustle:refresh', render);
+})();
+
+/* =================================================================
+   03 — SHOT TRACKER
+   ================================================================= */
+(function () {
+  const K = 'hustle:shots';
+  const list = document.getElementById('shotList');
+  const stats = document.getElementById('shotStats');
+
+  function render() {
+    const items = load(K, []);
+    const makes = items.reduce((a, b) => a + b.makes, 0);
+    const attempts = items.reduce((a, b) => a + b.attempts, 0);
+    const pct = attempts > 0 ? Math.round((makes / attempts) * 100) : 0;
+    stats.innerHTML =
+      '<div class="stat"><div class="stat-num">' + makes + '</div><div class="stat-label">Geraakt</div></div>' +
+      '<div class="stat"><div class="stat-num">' + attempts + '</div><div class="stat-label">Geprobeerd</div></div>' +
+      '<div class="stat"><div class="stat-num good">' + pct + '%</div><div class="stat-label">Trefkans</div></div>';
+
+    list.innerHTML = '';
+    if (items.length === 0) { list.innerHTML = '<li class="empty">Nog geen training gelogd.</li>'; return; }
+    items.slice().reverse().forEach(item => {
+      const ipct = item.attempts > 0 ? Math.round((item.makes / item.attempts) * 100) : 0;
+      const li = document.createElement('li');
+      li.className = 'row';
+      li.innerHTML =
+        '<div class="row-main">' + item.drill + '<div class="row-sub">' + item.date + ' · ' + item.makes + '/' + item.attempts + '</div></div>' +
+        '<div class="row-amt in">' + ipct + '%</div>' +
+        '<button class="row-del" data-id="' + item.id + '">×</button>';
+      list.appendChild(li);
+    });
+    list.querySelectorAll('.row-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        save(K, load(K, []).filter(i => i.id !== btn.dataset.id));
+        render(); window.dispatchEvent(new Event('hustle:refresh'));
+      });
+    });
+  }
+
+  document.getElementById('shotAdd').addEventListener('click', () => {
+    const drill = document.getElementById('shotDrill').value.trim();
+    const makes = parseInt(document.getElementById('shotMakes').value, 10);
+    const attempts = parseInt(document.getElementById('shotAttempts').value, 10);
+    if (!drill || isNaN(makes) || isNaN(attempts) || attempts <= 0 || makes > attempts || makes < 0) return;
+    const items = load(K, []);
+    items.push({ id: uid(), drill, makes, attempts, date: todayStr() });
+    save(K, items);
+    document.getElementById('shotDrill').value = '';
+    document.getElementById('shotMakes').value = '';
+    document.getElementById('shotAttempts').value = '';
+    render();
+    window.dispatchEvent(new Event('hustle:refresh'));
+  });
+
+  render();
+  window.addEventListener('hustle:refresh', render);
+})();
+
+/* =================================================================
+   04 — PROFIT GOAL (reads Hustle Ledger, current month)
+   ================================================================= */
+function profitGoalPct() {
+  const goal = load('hustle:profitgoal', { target: 20 });
+  const items = load('hustle:ledger', []).filter(i => i.date.slice(0, 7) === monthStr());
+  const net = items.filter(i => i.type === 'in').reduce((a, b) => a + b.amount, 0)
+    - items.filter(i => i.type === 'out').reduce((a, b) => a + b.amount, 0);
+  return goal.target > 0 ? (net / goal.target) * 100 : 0;
+}
+(function () {
+  const K = 'hustle:profitgoal';
+  const stats = document.getElementById('profitStats');
+  const bar = document.getElementById('profitBar');
+  const input = document.getElementById('profitTarget');
+
+  function render() {
+    const goal = load(K, { target: 20 });
+    input.value = goal.target;
+    const items = load('hustle:ledger', []).filter(i => i.date.slice(0, 7) === monthStr());
+    const net = items.filter(i => i.type === 'in').reduce((a, b) => a + b.amount, 0)
+      - items.filter(i => i.type === 'out').reduce((a, b) => a + b.amount, 0);
+    const pct = goal.target > 0 ? Math.max(0, Math.min(100, Math.round((net / goal.target) * 100))) : 0;
+    stats.innerHTML =
+      '<div class="stat"><div class="stat-num ' + (net >= 0 ? 'good' : 'bad') + '">' + euro(net) + '</div><div class="stat-label">Winst deze maand</div></div>' +
+      '<div class="stat"><div class="stat-num">' + euro(goal.target) + '</div><div class="stat-label">Doel</div></div>' +
+      '<div class="stat"><div class="stat-num">' + pct + '%</div><div class="stat-label">Behaald</div></div>';
+    bar.style.width = pct + '%';
+    bar.className = 'bar-fill' + (net < 0 ? ' bad' : pct < 50 ? ' warn' : '');
+  }
+
+  document.getElementById('profitSave').addEventListener('click', () => {
+    const target = parseFloat(input.value);
+    if (isNaN(target) || target <= 0) return;
+    save(K, { target });
+    render();
+    window.dispatchEvent(new Event('hustle:refresh'));
+  });
+
+  render();
+  window.addEventListener('hustle:refresh', render);
+})();
+
+/* =================================================================
+   05 — BALANCE METER
+   ================================================================= */
+(function () {
+  const K = 'hustle:balance';
+  const ball = document.getElementById('balBall');
+  const biz = document.getElementById('balBiz');
+  const rest = document.getElementById('balRest');
+  const bar = document.getElementById('balanceBar');
+
+  function render() {
+    const v = load(K, { ball: 0, biz: 0, rest: 0 });
+    ball.value = v.ball || '';
+    biz.value = v.biz || '';
+    rest.value = v.rest || '';
+    const total = (v.ball || 0) + (v.biz || 0) + (v.rest || 0);
+    const pb = total > 0 ? Math.round((v.ball / total) * 100) : 0;
+    const pbiz = total > 0 ? Math.round((v.biz / total) * 100) : 0;
+    const pr = total > 0 ? Math.max(0, 100 - pb - pbiz) : 0;
+    document.getElementById('balBallPct').textContent = pb + '%';
+    document.getElementById('balBizPct').textContent = pbiz + '%';
+    document.getElementById('balRestPct').textContent = pr + '%';
+    bar.innerHTML =
+      '<div class="stack-seg" style="width:' + pb + '%;background:#7CEFB9"></div>' +
+      '<div class="stack-seg" style="width:' + pbiz + '%;background:#F2C063"></div>' +
+      '<div class="stack-seg" style="width:' + pr + '%;background:#5B7A6E"></div>';
+  }
+
+  function onChange() {
+    save(K, {
+      ball: parseFloat(ball.value) || 0,
+      biz: parseFloat(biz.value) || 0,
+      rest: parseFloat(rest.value) || 0
+    });
+    render();
+    window.dispatchEvent(new Event('hustle:refresh'));
+  }
+  [ball, biz, rest].forEach(el => el.addEventListener('input', onChange));
+
+  render();
+  window.addEventListener('hustle:refresh', render);
+})();
+
+/* =================================================================
+   06 — PRICE CALCULATOR
+   ================================================================= */
+(function () {
+  const K = 'hustle:pricecalc';
+  const cost = document.getElementById('calcCost');
+  const margin = document.getElementById('calcMargin');
+  const qty = document.getElementById('calcQty');
+  const out = document.getElementById('calcOut');
+
+  function render() {
+    const c = parseFloat(cost.value) || 0;
+    const m = parseFloat(margin.value) || 0;
+    const q = parseFloat(qty.value) || 0;
+    const price = c * (1 + m / 100);
+    const profitEach = price - c;
+    const totalProfit = profitEach * q;
+    out.innerHTML =
+      '<div class="stat"><div class="stat-num">' + euro(price) + '</div><div class="stat-label">Verkoopprijs / stuk</div></div>' +
+      '<div class="stat"><div class="stat-num good">' + euro(profitEach) + '</div><div class="stat-label">Winst / stuk</div></div>' +
+      '<div class="stat"><div class="stat-num good">' + euro(totalProfit) + '</div><div class="stat-label">Totale winst (' + (q || 0) + 'x)</div></div>';
+  }
+
+  [cost, margin, qty].forEach(el => el.addEventListener('input', () => { save(K, { cost: cost.value, margin: margin.value, qty: qty.value }); render(); }));
+
+  const saved = load(K, null);
+  if (saved) { cost.value = saved.cost || ''; margin.value = saved.margin || ''; qty.value = saved.qty || ''; }
+  render();
+})();
+
+/* =================================================================
+   07 — TROPHY WALL — real circular medal badges with SVG icons
+   ================================================================= */
+(function () {
+  const grid = document.getElementById('badgeGrid');
+
+  const ICONS = {
+    receipt: '<path d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21V3Z"/><path d="M9 8h6M9 12h6"/>',
+    trendingUp: '<polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/>',
+    coin: '<circle cx="12" cy="12" r="8"/><path d="M15 9c-.7-.8-1.8-1.3-3-1.3-2.3 0-4.2 1.9-4.2 4.3S9.7 16.3 12 16.3c1.2 0 2.3-.5 3-1.3"/><line x1="7" y1="10.5" x2="13" y2="10.5"/><line x1="7" y1="13.5" x2="13" y2="13.5"/>',
+    check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/>',
+    basketball: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M3 12h18"/><path d="M5 5c2.5 3 2.5 11 0 14"/><path d="M19 5c-2.5 3-2.5 11 0 14"/>',
+    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/>',
+    trophy: '<path d="M8 4h8v4a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5a2 2 0 0 0 0 4h2.5M16 5h3a2 2 0 0 1 0 4h-2.5"/><path d="M9 20h6"/><path d="M12 13v4"/>',
+    scale: '<path d="M12 3v18"/><path d="M5 7l-3 6a3 3 0 0 0 6 0L5 7Z"/><path d="M19 7l-3 6a3 3 0 0 0 6 0l-3-6Z"/><path d="M5 7h14"/><path d="M8 21h8"/>'
+  };
+  const LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
+  function svg(name) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[name] + '</svg>';
+  }
+
+  function render() {
+    const ledger = load('hustle:ledger', []);
+    const goals = load('hustle:goals', []);
+    const shots = load('hustle:shots', []);
+    const balance = load('hustle:balance', { ball: 0, biz: 0, rest: 0 });
+
+    const ledgerNet = ledger.filter(i => i.type === 'in').reduce((a, b) => a + b.amount, 0)
+      - ledger.filter(i => i.type === 'out').reduce((a, b) => a + b.amount, 0);
+    const attempts = shots.reduce((a, b) => a + b.attempts, 0);
+    const makes = shots.reduce((a, b) => a + b.makes, 0);
+    const fgPct = attempts > 0 ? (makes / attempts) * 100 : 0;
+    const bestGoalPct = goals.reduce((max, g) => g.target > 0 ? Math.max(max, g.saved / g.target) : max, 0);
+    const balanceTotal = (balance.ball || 0) + (balance.biz || 0);
+
+    const badges = [
+      { name: 'Eerste boeking', desc: 'Log je eerste inkomst of uitgave.', icon: 'receipt', unlocked: ledger.length >= 1 },
+      { name: 'Winst maker', desc: 'Sta in de plus in je Hustle Ledger.', icon: 'trendingUp', unlocked: ledgerNet > 0 },
+      { name: 'Spaarder', desc: 'Eén spaarpotje minstens halfvol.', icon: 'coin', unlocked: bestGoalPct >= 0.5 },
+      { name: 'Pot vol', desc: 'Eén spaarpotje volledig gevuld.', icon: 'check', unlocked: bestGoalPct >= 1 },
+      { name: 'Century club', desc: '100 schoten gelogd in de Shot Tracker.', icon: 'basketball', unlocked: attempts >= 100 },
+      { name: 'Sharpshooter', desc: '50%+ trefkans over 20+ schoten.', icon: 'target', unlocked: attempts >= 20 && fgPct >= 50 },
+      { name: 'Doel gehaald', desc: 'Je maandwinst-doel behaald.', icon: 'trophy', unlocked: profitGoalPct() >= 100 },
+      { name: 'Balans baas', desc: '10+ uur bal en business samen deze week.', icon: 'scale', unlocked: balanceTotal >= 10 }
+    ];
+
+    grid.innerHTML = badges.map(b =>
+      '<div class="badge ' + (b.unlocked ? 'unlocked' : '') + '">' +
+      '<div class="badge-medal" title="' + b.desc + '">' + svg(b.icon) +
+      '<span class="badge-lock">' + LOCK_SVG + '</span>' +
+      '</div>' +
+      '<div class="badge-name">' + b.name + '</div>' +
+      '<div class="badge-desc">' + b.desc + '</div>' +
+      '</div>'
+    ).join('');
+  }
+
+  render();
+  window.addEventListener('hustle:refresh', render);
+})();
+
+/* ---- cloud sync: mirrors every "hustle:" key across devices ---- */
+if (window.initCloudSync) {
+  window.initCloudSync({
+    appKey: 'hustle',
+    syncedPrefixes: ['hustle:'],
+    onApplied: function () { window.dispatchEvent(new Event('hustle:refresh')); }
+  });
+}
+</script>
+</body>
+</html>

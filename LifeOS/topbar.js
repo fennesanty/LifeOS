@@ -21,6 +21,7 @@
 
   // -------- CSS --------
   const css = `
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');
 .topbar {
   position: sticky; top: max(8px, env(safe-area-inset-top)); z-index: 40;
   display: flex; justify-content: space-between; align-items: center;
@@ -56,9 +57,21 @@
 }
 .topbar-back:hover { background: rgba(255,255,255,0.09); }
 .topbar-back svg { width: 16px; height: 16px; }
-.topbar-brand { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; overflow: hidden; }
+.topbar-brand { display: flex; align-items: center; gap: 7px; min-width: 0; overflow: hidden; }
+.topbar-brand-mark {
+  display: inline-flex; flex-shrink: 0; color: #7CEFB9;
+  filter: drop-shadow(0 0 6px rgba(124,239,185,0.65));
+  animation: brandMarkPulse 3.2s ease-in-out infinite;
+}
+.topbar-brand-mark svg { width: 15px; height: 15px; }
+@keyframes brandMarkPulse { 0%,100% { opacity: 0.75; } 50% { opacity: 1; } }
+.topbar-brand-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; overflow: hidden; }
 .topbar-brand-title {
-  font-size: 12px; font-weight: 800; letter-spacing: 0.01em; color: #FAFAFA;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: -0.01em;
+  background: linear-gradient(120deg, #FFFFFF 10%, #BFF3D8 60%, #7CEFB9 110%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
   white-space: nowrap;
 }
 .topbar-brand-sub {
@@ -257,8 +270,11 @@ body.topbar-modal-open {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
     <div class="topbar-brand">
-      <span class="topbar-brand-title">LifeOS</span>
-      <span class="topbar-brand-sub">Dashboard from Fenne</span>
+      <span class="topbar-brand-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.6 3.6 2 6 6 8-4 2-5.4 4.4-6 8-.6-3.6-2-6-6-8 4-2 5.4-4.4 6-8Z"/></svg></span>
+      <span class="topbar-brand-text">
+        <span class="topbar-brand-title">LifeOS</span>
+        <span class="topbar-brand-sub">Dashboard from Fenne</span>
+      </span>
     </div>
   </div>
   <div class="topbar-right">

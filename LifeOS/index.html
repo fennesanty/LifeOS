@@ -14,6 +14,7 @@
 <script src="topbar.js" defer></script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');
 /* ===== Shared design tokens (same as the rest of the dashboard) ===== */
 :root {
   --text-primary: #EAEFEA;
@@ -21,6 +22,7 @@
   --text-tertiary: #6E827A;
   --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-head: 'Space Grotesk', var(--font);
 }
 * { box-sizing: border-box; }
 html, body {
@@ -53,13 +55,17 @@ body::after {
 
 .page { max-width: 1100px; margin: 0 auto; }
 .dash-title {
-  margin: 0 0 18px; font-family: var(--font-display); font-style: italic; font-weight: 500;
-  font-size: 38px; letter-spacing: -0.01em;
+  margin: 0 0 4px; font-family: var(--font-display); font-style: italic; font-weight: 500;
+  font-size: 34px; letter-spacing: -0.01em;
   background: linear-gradient(180deg, #FFFFFF 0%, #C7C4BC 120%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
 }
-@media (max-width: 480px) { .dash-title { font-size: 28px; } }
+.dash-date {
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary);
+}
+@media (max-width: 480px) { .dash-title { font-size: 26px; } }
 
 /* ===== Liquid glass — shared surface treatment ===== */
 .lg-glass {
@@ -81,27 +87,47 @@ body::after {
   mix-blend-mode: screen; pointer-events: none;
 }
 
+/* ===== Entrance choreography ===== */
+@keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-card, .tile-card { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
 /* ===== Hero — "Today" featured card ===== */
 .hero-card {
   --accent: #6BE3A4;
+  position: relative; overflow: hidden;
   display: flex; align-items: center; gap: 16px;
   padding: 22px;
-  margin-bottom: 26px;
+  margin-bottom: 16px;
   border-radius: 22px;
   text-decoration: none;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  opacity: 0; animation: riseIn 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+  transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s ease;
 }
-.hero-card:hover { transform: translateY(-2px); }
-.hero-card:active { transform: translateY(0); }
+.hero-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.hero-card:active { transform: translateY(-1px) scale(0.995); }
 .hero-icon {
-  width: 58px; height: 58px; flex-shrink: 0;
+  width: 58px; height: 58px; flex-shrink: 0; position: relative;
   display: flex; align-items: center; justify-content: center;
   border-radius: 16px;
   background: color-mix(in srgb, var(--accent) 20%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
   color: var(--accent);
   filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 50%, transparent));
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
 }
+.hero-card:hover .hero-icon { transform: scale(1.06) rotate(-3deg); }
+.hero-icon::after {
+  content: ''; position: absolute; inset: -6px; border-radius: 18px;
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  filter: blur(10px); opacity: 0.55; z-index: -1;
+  animation: heroPulse 2.8s ease-in-out infinite;
+}
+@keyframes heroPulse { 0%,100% { opacity: 0.35; } 50% { opacity: 0.65; } }
 .hero-icon svg { width: 28px; height: 28px; }
 .hero-body { flex: 1; min-width: 0; }
 .hero-eyebrow {
@@ -110,59 +136,73 @@ body::after {
   color: var(--text-tertiary); margin-bottom: 4px;
 }
 .hero-title {
-  margin: 0 0 3px; font-size: 26px; font-weight: 700;
+  margin: 0 0 3px; font-family: var(--font-head); font-size: 25px; font-weight: 700;
   letter-spacing: -0.02em; color: var(--text-primary);
 }
 .hero-sub { font-size: 13.5px; color: var(--text-secondary); }
 .hero-arrow {
   flex-shrink: 0; color: var(--accent);
-  transition: transform 0.18s ease;
+  transition: transform 0.25s cubic-bezier(0.22,1,0.36,1);
 }
 .hero-arrow svg { width: 20px; height: 20px; }
-.hero-card:hover .hero-arrow { transform: translateX(4px); }
+.hero-card:hover .hero-arrow { transform: translateX(5px); }
 
-/* ===== Grouped menu list — replaces the old block grid ===== */
-.menu-section { margin-bottom: 22px; }
-.menu-group {
-  border-radius: 20px;
-  overflow: hidden;
+/* ===== Tile grid — replaces the old settings-style list ===== */
+.tile-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
-.menu-row {
+.tile-card {
   --accent: #6BE3A4;
-  display: flex; align-items: center; gap: 14px;
-  padding: 15px 18px;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 18px;
+  border-radius: 18px;
   text-decoration: none;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  transition: background 0.15s ease;
+  opacity: 0; animation: riseIn 0.5s cubic-bezier(0.22,1,0.36,1) forwards;
+  transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s ease, border-color 0.22s ease;
 }
-.menu-row:last-child { border-bottom: none; }
-.menu-row:hover { background: rgba(255,255,255,0.045); }
-.menu-row:active { background: rgba(255,255,255,0.07); }
-.menu-icon {
+.tile-card:nth-child(1) { animation-delay: 0.06s; }
+.tile-card:nth-child(2) { animation-delay: 0.10s; }
+.tile-card:nth-child(3) { animation-delay: 0.14s; }
+.tile-card:nth-child(4) { animation-delay: 0.18s; }
+.tile-card:nth-child(5) { animation-delay: 0.22s; }
+.tile-card:nth-child(6) { animation-delay: 0.26s; }
+.tile-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.5), 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.tile-card:active { transform: translateY(-1px) scale(0.99); }
+.tile-icon {
   width: 40px; height: 40px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   border-radius: 12px;
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 32%, transparent);
   color: var(--accent);
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
 }
-.menu-icon svg { width: 19px; height: 19px; }
-.menu-text { flex: 1; min-width: 0; }
-.menu-title { font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
-.menu-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
-.menu-chevron {
-  flex-shrink: 0; color: var(--text-tertiary);
-  transition: transform 0.15s ease, color 0.15s ease;
+.tile-card:hover .tile-icon { transform: scale(1.1) rotate(-4deg); }
+.tile-icon svg { width: 19px; height: 19px; }
+.tile-text { margin-top: auto; }
+.tile-title { display: block; font-family: var(--font-head); font-size: 15.5px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
+.tile-sub { display: block; margin-top: 3px; font-size: 11.5px; color: var(--text-tertiary); }
+.tile-foot { display: flex; align-items: center; justify-content: flex-end; }
+.tile-arrow {
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease, color 0.2s ease;
 }
-.menu-chevron svg { width: 17px; height: 17px; }
-.menu-row:hover .menu-chevron { transform: translateX(3px); color: var(--accent); }
+.tile-arrow svg { width: 16px; height: 16px; }
+.tile-card:hover .tile-arrow { transform: translateX(4px); color: var(--accent); }
 
 @media (max-width: 480px) {
   body { padding: max(20px, env(safe-area-inset-top)) 14px 50px; }
   .hero-card { padding: 18px; gap: 13px; }
   .hero-icon { width: 50px; height: 50px; border-radius: 14px; }
-  .hero-title { font-size: 22px; }
-  .menu-row { padding: 13px 15px; }
+  .hero-title { font-size: 21px; }
+}
+@media (max-width: 360px) {
+  .tile-grid { grid-template-columns: 1fr; }
 }
 
 /* ===== Header row + gear ===== */
@@ -249,7 +289,10 @@ body::after {
 <div class="page">
 
   <div class="hub-head">
-    <h1 class="dash-title">Fenne's Dashboard</h1>
+    <div>
+      <h1 class="dash-title" id="dashGreeting">Hi, Fenne</h1>
+      <span class="dash-date" id="dashDate"></span>
+    </div>
     <button class="gear-btn" id="settingsOpen" type="button" aria-label="Settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
@@ -268,52 +311,37 @@ body::after {
     <span class="hero-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
   </a>
 
-  <div class="menu-section">
-    <div class="section-label"><span class="sl-num">02</span><span class="sl-text">Body</span></div>
-    <div class="menu-group lg-glass">
-      <a class="menu-row" href="gym.html" style="--accent:#7DD3FC">
-        <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10"/><path d="M4 9v6"/><path d="M18 7v10"/><path d="M20 9v6"/><path d="M6 12h12"/></svg></span>
-        <span class="menu-text"><span class="menu-title">Fitness</span><span class="menu-sub">Workouts, splits, sessions</span></span>
-        <span class="menu-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span>
-      </a>
-      <a class="menu-row" href="health.html" style="--accent:#A7F3D0">
-        <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 20.5 3.5 13.5a5 5 0 1 1 7-7l7 7a5 5 0 1 1-7 7Z"/><path d="M8.5 8.5l7 7"/></svg></span>
-        <span class="menu-text"><span class="menu-title">Health</span><span class="menu-sub">Supplements & vitals</span></span>
-        <span class="menu-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span>
-      </a>
-      <a class="menu-row" href="po-water.html" style="--accent:#60A5FA">
-        <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5s7 7.5 7 12a7 7 0 1 1-14 0c0-4.5 7-12 7-12Z"/></svg></span>
-        <span class="menu-text"><span class="menu-title">Water</span><span class="menu-sub">Hydration</span></span>
-        <span class="menu-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="menu-section">
-    <div class="section-label"><span class="sl-num">03</span><span class="sl-text">Life</span></div>
-    <div class="menu-group lg-glass">
-      <a class="menu-row" href="finance.html" style="--accent:#F2C063">
-        <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="20" x2="4" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="9"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span>
-        <span class="menu-text"><span class="menu-title">Finance</span><span class="menu-sub">Net worth & spending</span></span>
-        <span class="menu-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span>
-      </a>
-      <a class="menu-row" href="caffeine.html" style="--accent:#C9A36B">
-        <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h14v6a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9Z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M7 2c0 1-1 1-1 2s1 1 1 2"/><path d="M11 2c0 1-1 1-1 2s1 1 1 2"/></svg></span>
-        <span class="menu-text"><span class="menu-title">Caffeine</span><span class="menu-sub">Intake & timing</span></span>
-        <span class="menu-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="menu-section">
-    <div class="section-label"><span class="sl-num">04</span><span class="sl-text">Assistant</span></div>
-    <div class="menu-group lg-glass">
-      <a class="menu-row" href="nova-lite.html" style="--accent:#A78BFA">
-        <span class="menu-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.6 3.6 2 6 6 8-4 2-5.4 4.4-6 8-.6-3.6-2-6-6-8 4-2 5.4-4.4 6-8Z"/></svg></span>
-        <span class="menu-text"><span class="menu-title">Nova</span><span class="menu-sub">Your AI mentor</span></span>
-        <span class="menu-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span>
-      </a>
-    </div>
+  <div class="tile-grid">
+    <a class="tile-card lg-glass" href="gym.html" style="--accent:#7DD3FC">
+      <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10"/><path d="M4 9v6"/><path d="M18 7v10"/><path d="M20 9v6"/><path d="M6 12h12"/></svg></span>
+      <span class="tile-text"><span class="tile-title">Fitness</span><span class="tile-sub">Workouts, splits, sessions</span></span>
+      <span class="tile-foot"><span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span></span>
+    </a>
+    <a class="tile-card lg-glass" href="health.html" style="--accent:#A7F3D0">
+      <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 20.5 3.5 13.5a5 5 0 1 1 7-7l7 7a5 5 0 1 1-7 7Z"/><path d="M8.5 8.5l7 7"/></svg></span>
+      <span class="tile-text"><span class="tile-title">Health</span><span class="tile-sub">Supplements & vitals</span></span>
+      <span class="tile-foot"><span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span></span>
+    </a>
+    <a class="tile-card lg-glass" href="po-water.html" style="--accent:#60A5FA">
+      <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5s7 7.5 7 12a7 7 0 1 1-14 0c0-4.5 7-12 7-12Z"/></svg></span>
+      <span class="tile-text"><span class="tile-title">Water</span><span class="tile-sub">Hydration</span></span>
+      <span class="tile-foot"><span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span></span>
+    </a>
+    <a class="tile-card lg-glass" href="hustle.html" style="--accent:#FB923C">
+      <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M3 12h18"/><path d="M5 5c2.5 3 2.5 11 0 14"/><path d="M19 5c-2.5 3-2.5 11 0 14"/></svg></span>
+      <span class="tile-text"><span class="tile-title">Hustle</span><span class="tile-sub">Ballen, ledger & badges</span></span>
+      <span class="tile-foot"><span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span></span>
+    </a>
+    <a class="tile-card lg-glass" href="finance.html" style="--accent:#F2C063">
+      <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="20" x2="4" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="9"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span>
+      <span class="tile-text"><span class="tile-title">Finance</span><span class="tile-sub">Net worth & spending</span></span>
+      <span class="tile-foot"><span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span></span>
+    </a>
+    <a class="tile-card lg-glass" href="nova-lite.html" style="--accent:#A78BFA">
+      <span class="tile-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.6 3.6 2 6 6 8-4 2-5.4 4.4-6 8-.6-3.6-2-6-6-8 4-2 5.4-4.4 6-8Z"/></svg></span>
+      <span class="tile-text"><span class="tile-title">Nova</span><span class="tile-sub">Your AI mentor</span></span>
+      <span class="tile-foot"><span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></span></span>
+    </a>
   </div>
 
 </div>
@@ -387,6 +415,16 @@ body::after {
     </div>
   </div>
 </div>
+
+<script>
+(function () {
+  'use strict';
+  var h = new Date().getHours();
+  var greeting = h < 5 ? 'Still up, Fenne' : h < 12 ? 'Good morning, Fenne' : h < 18 ? 'Good afternoon, Fenne' : 'Good evening, Fenne';
+  document.getElementById('dashGreeting').textContent = greeting;
+  document.getElementById('dashDate').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+})();
+</script>
 
 <script>
 (function () {

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1410">
+<title>Baller &amp; Boss · Test Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;1,6..72,500&family=Space+Mono:wght@400;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =================================================================
+   Standalone test page. No link to sync.js / lock.js / topbar.js /
+   theme.css and a separate localStorage prefix ("btl:") — nothing
+   here can touch or collide with the real dashboard.
+   ================================================================= */
+:root {
+  --bg-deep: #0A1410;
+  --text-primary: #EAEFEA;
+  --text-secondary: #9fb3a9;
+  --text-tertiary: #6E827A;
+  --good: #7CEFB9;
+  --warn: #F2C063;
+  --bad: #FF8A8A;
+  --line: rgba(124,239,185,0.16);
+  --line-soft: rgba(124,239,185,0.10);
+  --line-strong: rgba(124,239,185,0.35);
+  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: 'Newsreader', Georgia, serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: #0A1410;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 18px 60px;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 82% 14%, rgba(124,239,185,0.14), transparent 45%),
+    radial-gradient(circle at 18% 90%, rgba(124,239,185,0.06), transparent 50%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: -1;
+}
+.page { max-width: 880px; margin: 0 auto; }
+
+.lab-title {
+  margin: 0 0 4px;
+  font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
+  background: linear-gradient(180deg, #FFFFFF 0%, #C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.lab-sub {
+  font-family: var(--font-display); font-style: italic; font-weight: 500;
+  font-size: 14px; color: var(--text-secondary); margin: 0 0 18px;
+}
+.lab-note {
+  border: 1px solid var(--line); background: rgba(124,239,185,0.04);
+  border-radius: 12px; padding: 12px 14px; font-size: 12px;
+  color: var(--text-tertiary); margin-bottom: 26px; line-height: 1.5;
+}
+.lab-note b { color: var(--text-secondary); }
+
+.section { margin-top: 26px; }
+.section-label {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px; font-family: var(--font-mono);
+}
+.sl-num { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--good); }
+.sl-num::before { content: '·'; margin-right: 1px; }
+.sl-text { font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-tertiary); }
+.section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+.sl-hint { font-size: 10.5px; color: var(--text-tertiary); font-style: italic; margin-top: -8px; margin-bottom: 12px; }
+
+.card {
+  position: relative;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px; padding: 18px;
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+}
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.stat { background: rgba(255,255,255,0.03); border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px; }
+.stat-num { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); line-height: 1; }
+.stat-num.good { color: var(--good); }
+.stat-num.bad { color: var(--bad); }
+.stat-label { margin-top: 5px; font-size: 9.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); }
+
+.row-list { list-style: none; margin: 0 0 12px; padding: 0; max-height: 260px; overflow-y: auto; }
+.row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--line-soft); border-radius: 11px; font-size: 13px; }
+.row-main { flex: 1; min-width: 0; color: var(--text-primary); }
+.row-sub { font-size: 10.5px; color: var(--text-tertiary); }
+.row-amt { font-family: var(--font-mono); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.row-amt.in { color: var(--good); }
+.row-amt.out { color: var(--bad); }
+.row-del { border: 0; background: transparent; color: var(--text-tertiary); font-size: 17px; cursor: pointer; opacity: 0.5; padding: 0 2px; line-height: 1; }
+.row-del:hover { opacity: 1; color: var(--bad); }
+.empty { text-align: center; font-size: 12px; font-style: italic; color: var(--text-tertiary); padding: 14px 0; }
+
+.form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.in {
+  flex: 1; min-width: 90px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: rgba(0,0,0,0.25); color: var(--text-primary);
+  font-family: inherit; font-size: 13px; outline: none;
+}
+.in::placeholder { color: var(--text-tertiary); }
+.in:focus { border-color: var(--line-strong); }
+select.in { cursor: pointer; }
+.btn {
+  padding: 10px 16px; border: 0; border-radius: 10px;
+  font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.btn-primary { background: var(--good); color: var(--bg-deep); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost { background: rgba(124,239,185,0.06); border: 1px solid var(--line); color: var(--text-primary); }
+.btn-ghost:hover { border-color: var(--line-strong); }
+.checkbox { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--good); cursor: pointer; }
+
+.bar-track { height: 9px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, var(--good), #5fd9a0); border-radius: 99px; transition: width 0.3s; }
+.bar-fill.warn { background: linear-gradient(90deg, var(--warn), #e0a83f); }
+.bar-fill.bad { background: linear-gradient(90deg, var(--bad), #e06a6a); }
+
+.goal-card { padding: 13px 14px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border: 1px solid var(--line-soft); border-radius: 12px; }
+.goal-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; gap: 8px; }
+.goal-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.goal-amt { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-tertiary); white-space: nowrap; }
+.goal-actions { display: flex; gap: 6px; margin-top: 8px; }
+.mini-btn { padding: 5px 10px; font-size: 11px; border-radius: 8px; border: 1px solid var(--line); background: rgba(124,239,185,0.05); color: var(--text-secondary); cursor: pointer; }
+.mini-btn:hover { border-color: var(--line-strong); color: var(--text-primary); }
+
+.pill-tag { display: inline-flex; align-items: center; font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid; }
+.pill-ready { color: var(--bg-deep); border-color: var(--good); background: var(--good); }
+.pill-progress { color: var(--text-tertiary); border-color: var(--line); background: rgba(124,239,185,0.03); }
+
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.badge {
+  border-radius: 12px; padding: 13px; text-align: center;
+  border: 1px solid var(--line-soft); background: rgba(255,255,255,0.025);
+  opacity: 0.4;
+}
+.badge.unlocked { opacity: 1; border-color: var(--line-strong); background: rgba(124,239,185,0.06); box-shadow: 0 0 18px rgba(124,239,185,0.10); }
+.badge-name { font-size: 11.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+.badge.unlocked .badge-name { color: var(--good); }
+.badge-desc { font-size: 10px; color: var(--text-tertiary); line-height: 1.4; }
+
+.balance-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.balance-label { width: 84px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; }
+.balance-row .in { max-width: 70px; flex: 0 0 auto; }
+.balance-pct { width: 42px; text-align: right; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; }
+.stack-bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; margin-bottom: 16px; background: rgba(255,255,255,0.06); }
+.stack-seg { height: 100%; transition: width 0.3s; }
+
+.calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.calc-out { margin-top: 4px; }
+
+@media (max-width: 480px) {
+  .card { padding: 14px; }
+  .balance-label { width: 70px; font-size: 10.5px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1 class="lab-title">Baller &amp; Boss</h1>
+  <p class="lab-sub">10 ideeën om basketbal en ondernemen samen bij te houden</p>
+  <div class="lab-note">
+    <b>Test pagina, niet het echte dashboard.</b> Alles hier wordt apart opgeslagen
+    in deze browser (eigen sleutel, geen sync) — je echte data raakt dit niet.
+    Speel ermee en kijk welke onderdelen je écht zou gebruiken.
+  </div>
+
+  <!-- 01 — HUSTLE LEDGER -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">01</span><span class="sl-text">Hustle Ledger</span></div>
+    <div class="sl-hint">Inkomsten en uitgaven van je eigen "bedrijf" — verkoop, klusjes, materiaal.</div>
+    <div class="card">
+      <div class="stat-grid" id="ledgerStats"></div>
+      <ul class="row-list" id="ledgerList"></ul>
+      <div class="form-row">
+        <input class="in" id="ledgerDesc" type="text" placeholder="Waarvoor? (bv. 3 armbandjes verkocht)">
+        <input class="in" id="ledgerAmt" type="number" step="0.01" placeholder="€ bedrag" style="max-width:110px">
+        <select class="in" id="ledgerType" style="max-width:120px">
+          <option value="in">Inkomst</option>
+          <option value="out">Uitgave</option>
+        </select>
+        <button class="btn btn-primary" id="ledgerAdd">Toevoegen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 — SAVINGS GOALS -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">02</span><span class="sl-text">Spaarpotjes</span></div>
+    <div class="sl-hint">Eigen sparen voor schoenen, materiaal, of een investering in je business.</div>
+    <div class="card">
+      <div id="goalList"></div>
+      <div class="form-row">
+        <input class="in" id="goalName" type="text" placeholder="Waarvoor spaar je?">
+        <input class="in" id="goalTarget" type="number" step="0.01" placeholder="€ doel" style="max-width:110px">
+        <button class="btn btn-primary" id="goalAdd">Potje maken</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 — SHOT TRACKER -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">03</span><span class="sl-text">Shot Tracker</span></div>
+    <div class="sl-hint">Log elke training: hoeveel schoten raak je per oefening.</div>
+    <div class="card">
+      <div class="stat-grid" id="shotStats"></div>
+      <ul class="row-list" id="shotList"></ul>
+      <div class="form-row">
+        <input class="in" id="shotDrill" type="text" placeholder="Oefening (bv. vrije worpen)">
+        <input class="in" id="shotMakes" type="number" placeholder="Geraakt" style="max-width:90px">
+        <input class="in" id="shotAttempts" type="number" placeholder="Geprobeerd" style="max-width:90px">
+        <button class="btn btn-primary" id="shotAdd">Loggen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 — IDEA VAULT -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">04</span><span class="sl-text">Idea Vault</span></div>
+    <div class="sl-hint">Elk goed idee checkt 3 dingen: een probleem, een klant, en een prijs.</div>
+    <div class="card">
+      <div id="ideaList"></div>
+      <div class="form-row" style="margin-bottom:10px">
+        <input class="in" id="ideaName" type="text" placeholder="Idee naam">
+        <input class="in" id="ideaPitch" type="text" placeholder="Korte uitleg in 1 zin">
+      </div>
+      <div class="form-row">
+        <label style="font-size:11.5px;display:flex;align-items:center;gap:5px"><input type="checkbox" class="checkbox" id="ideaP"> Probleem</label>
+        <label style="font-size:11.5px;display:flex;align-items:center;gap:5px"><input type="checkbox" class="checkbox" id="ideaC"> Klant</label>
+        <label style="font-size:11.5px;display:flex;align-items:center;gap:5px"><input type="checkbox" class="checkbox" id="ideaPr"> Prijs</label>
+        <button class="btn btn-primary" id="ideaAdd">Idee opslaan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 — DAILY HUSTLE CHECKLIST -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">05</span><span class="sl-text">Daily Hustle</span></div>
+    <div class="sl-hint">Vaste taken voor vandaag, ballen en business gemixt. Streak telt elke dag dat alles afgewerkt is.</div>
+    <div class="card">
+      <div class="stat-grid" style="grid-template-columns:1fr">
+        <div class="stat"><div class="stat-num good" id="streakNum">0</div><div class="stat-label">Dagen op rij alles afgewerkt</div></div>
+      </div>
+      <ul class="row-list" id="taskList"></ul>
+      <div class="form-row">
+        <input class="in" id="taskText" type="text" placeholder="Nieuwe dagelijkse taak">
+        <button class="btn btn-primary" id="taskAdd">Taak toevoegen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 — PROFIT GOAL -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">06</span><span class="sl-text">Profit Goal</span></div>
+    <div class="sl-hint">Maandwinst uit je Hustle Ledger, vergeleken met je eigen doel.</div>
+    <div class="card">
+      <div class="stat-grid" id="profitStats"></div>
+      <div class="bar-track" style="margin-bottom:14px"><div class="bar-fill" id="profitBar" style="width:0%"></div></div>
+      <div class="form-row">
+        <input class="in" id="profitTarget" type="number" step="0.01" placeholder="€ doel deze maand" style="max-width:160px">
+        <button class="btn btn-ghost" id="profitSave">Doel opslaan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07 — SALES LOG / CRM -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">07</span><span class="sl-text">Sales Log</span></div>
+    <div class="sl-hint">Mini klantenboekje: wie kocht wat, en wie moet je nog opvolgen.</div>
+    <div class="card">
+      <div class="stat-grid" id="salesStats"></div>
+      <ul class="row-list" id="salesList"></ul>
+      <div class="form-row">
+        <input class="in" id="saleClient" type="text" placeholder="Klant">
+        <input class="in" id="saleItem" type="text" placeholder="Wat verkocht?">
+        <input class="in" id="saleAmt" type="number" step="0.01" placeholder="€" style="max-width:90px">
+        <button class="btn btn-primary" id="saleAdd">Verkoop loggen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 08 — BALANCE METER -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">08</span><span class="sl-text">Balance Meter</span></div>
+    <div class="sl-hint">Hoeveel uur ging deze week naar ballen, business, en de rest?</div>
+    <div class="card">
+      <div class="stack-bar" id="balanceBar"></div>
+      <div class="balance-row"><span class="balance-label">Basketbal</span><input class="in" id="balBall" type="number" min="0" placeholder="uur"><span class="balance-pct" id="balBallPct">0%</span></div>
+      <div class="balance-row"><span class="balance-label">Business</span><input class="in" id="balBiz" type="number" min="0" placeholder="uur"><span class="balance-pct" id="balBizPct">0%</span></div>
+      <div class="balance-row"><span class="balance-label">School/rust</span><input class="in" id="balRest" type="number" min="0" placeholder="uur"><span class="balance-pct" id="balRestPct">0%</span></div>
+    </div>
+  </div>
+
+  <!-- 09 — PRICE CALCULATOR -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">09</span><span class="sl-text">Price Calculator</span></div>
+    <div class="sl-hint">Kostprijs + gewenste winstmarge = verkoopprijs. Geen giswerk meer.</div>
+    <div class="card">
+      <div class="calc-grid">
+        <input class="in" id="calcCost" type="number" step="0.01" placeholder="Kostprijs €">
+        <input class="in" id="calcMargin" type="number" step="1" placeholder="Marge % (bv. 40)">
+        <input class="in" id="calcQty" type="number" step="1" placeholder="Aantal stuks">
+      </div>
+      <div class="stat-grid calc-out" id="calcOut"></div>
+    </div>
+  </div>
+
+  <!-- 10 — TROPHY WALL -->
+  <div class="section">
+    <div class="section-label"><span class="sl-num">10</span><span class="sl-text">Trophy Wall</span></div>
+    <div class="sl-hint">Automatische badges, op basis van alles hierboven.</div>
+    <div class="card">
+      <div class="badge-grid" id="badgeGrid"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ---- tiny shared helpers, isolated under the "btl:" prefix ---- */
+function load(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v === null || v === undefined ? fallback : v; }
+  catch (e) { return fallback; }
+}
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function euro(n) { return '€' + (Math.round((n || 0) * 100) / 100).toFixed(2); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function monthStr() { return new Date().toISOString().slice(0, 7); }
+
+/* =================================================================
+   01 — HUSTLE LEDGER
+   ================================================================= */
+(function () {
+  const K = 'btl:ledger';
+  const list = document.getElementById('ledgerList');
+  const stats = document.getElementById('ledgerStats');
+
+  function render() {
+    const items = load(K, []);
+    const income = items.filter(i => i.type === 'in').reduce((a, b) => a + b.amount, 0);
+    const expense = items.filter(i => i.type === 'out').reduce((a, b) => a + b.amount, 0);
+    stats.innerHTML =
+      '<div class="stat"><div class="stat-num good">' + euro(income) + '</div><div class="stat-label">Inkomsten</div></div>' +
+      '<div class="stat"><div class="stat-num bad">' + euro(expense) + '</div><div class="stat-label">Uitgaven</div></div>' +
+      '<div class="stat"><div class="stat-num">' + euro(income - expense) + '</div><div class="stat-label">Saldo</div></div>';
+
+    list.innerHTML = '';
+    if (items.length === 0) { list.innerHTML = '<li class="empty">Nog niets geboekt.</li>'; return; }
+    items.slice().reverse().forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'row';
+      li.innerHTML =
+        '<div class="row-main">' + item.desc + '<div class="row-sub">' + item.date + '</div></div>' +
+        '<div class="row-amt ' + item.type + '">' + (item.type === 'in' ? '+' : '-') + euro(item.amount) + '</div>' +
+        '<button class="row-del" data-id="' + item.id + '">×</button>';
+      list.appendChild(li);
+    });
+    list.querySelectorAll('.row-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        save(K, load(K, []).filter(i => i.id !== btn.dataset.id));
+        render(); window.dispatchEvent(new Event('btl:refresh'));
+      });
+    });
+  }
+
+  document.getElementById('ledgerAdd').addEventListener('click', () => {
+    const desc = document.getElementById('ledgerDesc').value.trim();
+    const amt = parseFloat(document.getElementById('ledgerAmt').value);
+    const type = document.getElementById('ledgerType').value;
+    if (!desc || !amt || amt <= 0) return;
+    const items = load(K, []);
+    items.push({ id: uid(), desc, amount: amt, type, date: todayStr() });
+    save(K, items);
+    document.getElementById('ledgerDesc').value = '';
+    document.getElementById('ledgerAmt').value = '';
+    render();
+    window.dispatchEvent(new Event('btl:refresh'));
+  });
+
+  render();
+  window.addEventListener('btl:refresh', render);
+})();
+
+/* =================================================================
+   02 — SAVINGS GOALS
+   ================================================================= */
+(function () {
+  const K = 'btl:goals';
+  const wrap = document.getElementById('goalList');
+
+  function render() {
+    const goals = load(K, []);
+    wrap.innerHTML = '';
+    if (goals.length === 0) { wrap.innerHTML = '<div class="empty">Nog geen spaarpotje.</div>'; return; }
+    goals.forEach(g => {
+      const pct = g.target > 0 ? Math.min(100, Math.round((g.saved / g.target) * 100)) : 0;
+      const div = document.createElement('div');
+      div.className = 'goal-card';
+      div.innerHTML =
+        '<div class="goal-top"><span class="goal-name">' + g.name + '</span><span class="goal-amt">' + euro(g.saved) + ' / ' + euro(g.target) + '</span></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="goal-actions">' +
+        '<button class="mini-btn" data-act="add" data-id="' + g.id + '">+ geld toevoegen</button>' +
+        '<button class="mini-btn" data-act="del" data-id="' + g.id + '">verwijderen</button>' +
+        '</div>';
+      wrap.appendChild(div);
+    });
+    wrap.querySelectorAll('[data-act="add"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const amt = parseFloat(prompt('Hoeveel euro toevoegen?', '5'));
+        if (!amt || amt <= 0) return;
+        const goals = load(K, []);
+        const g = goals.find(x => x.id === btn.dataset.id);
+        if (g) { g.saved += amt; save(K, goals); render(); window.dispatchEvent(new Event('btl:refresh')); }
+      });
+    });
+    wrap.querySelectorAll('[data-act="del"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        save(K, load(K, []).filter(x => x.id !== btn.dataset.id));
+        render(); window.dispatchEvent(new Event('btl:refresh'));
+      });
+    });
+  }
+
+  document.getElementById('goalAdd').addEventListener('click', () => {
+    const name = document.getElementById('goalName').value.trim();
+    const target = parseFloat(document.getElementById('goalTarget').value);
+    if (!name || !target || target <= 0) return;
+    const goals = load(K, []);
+    goals.push({ id: uid(), name, target, saved: 0 });
+    save(K, goals);
+    document.getElementById('goalName').value = '';
+    document.getElementById('goalTarget').value = '';
+    render();
+    window.dispatchEvent(new Event('btl:refresh'));
+  });
+
+  render();
+  window.addEventListener('btl:refresh', render);
+})();
+
+/* =================================================================
+   03 — SHOT TRACKER
+   ================================================================= */
+(function () {
+  const K = 'btl:shots';
+  const list = document.getElementById('shotList');
+  const stats = document.getElementById('shotStats');
+
+  function render() {
+    const items = load(K, []);
+    const makes = items.reduce((a, b) => a + b.makes, 0);
+    const attempts = items.reduce((a, b) => a + b.attempts, 0);
+    const pct = attempts > 0 ? Math.round((makes / attempts) * 100) : 0;
+    stats.innerHTML =
+      '<div class="stat"><div class="stat-num">' + makes + '</div><div class="stat-label">Geraakt</div></div>' +
+      '<div class="stat"><div class="stat-num">' + attempts + '</div><div class="stat-label">Geprobeerd</div></div>' +
+      '<div class="stat"><div class="stat-num good">' + pct + '%</div><div class="stat-label">Trefkans</div></div>';
+
+    list.innerHTML = '';
+    if (items.length === 0) { list.innerHTML = '<li class="empty">Nog geen training gelogd.</li>'; return; }
+    items.slice().reverse().forEach(item => {
+      const ipct = item.attempts > 0 ? Math.round((item.makes / item.attempts) * 100) : 0;
+      const li = document.createElement('li');
+      li.className = 'row';
+      li.innerHTML =
+        '<div class="row-main">' + item.drill + '<div class="row-sub">' + item.date + ' · ' + item.makes + '/' + item.attempts + '</div></div>' +
+        '<div class="row-amt in">' + ipct + '%</div>' +
+        '<button class="row-del" data-id="' + item.id + '">×</button>';
+      list.appendChild(li);
+    });
+    list.querySelectorAll('.row-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        save(K, load(K, []).filter(i => i.id !== btn.dataset.id));
+        render(); window.dispatchEvent(new Event('btl:refresh'));
+      });
+    });
+  }
+
+  document.getElementById('shotAdd').addEventListener('click', () => {
+    const drill = document.getElementById('shotDrill').value.trim();
+    const makes = parseInt(document.getElementById('shotMakes').value, 10);
+    const attempts = parseInt(document.getElementById('shotAttempts').value, 10);
+    if (!drill || isNaN(makes) || isNaN(attempts) || attempts <= 0 || makes > attempts || makes < 0) return;
+    const items = load(K, []);
+    items.push({ id: uid(), drill, makes, attempts, date: todayStr() });
+    save(K, items);
+    document.getElementById('shotDrill').value = '';
+    document.getElementById('shotMakes').value = '';
+    document.getElementById('shotAttempts').value = '';
+    render();
+    window.dispatchEvent(new Event('btl:refresh'));
+  });
+
+  render();
+  window.addEventListener('btl:refresh', render);
+})();
+
+/* =================================================================
+   04 — IDEA VAULT
+   ================================================================= */
+(function () {
+  const K = 'btl:ideas';
+  const wrap = document.getElementById('ideaList');
+
+  function render() {
+    const ideas = load(K, []).slice().sort((a, b) => b.score - a.score);
+    wrap.innerHTML = '';
+    if (ideas.length === 0) { wrap.innerHTML = '<div class="empty">Nog geen idee opgeslagen.</div>'; return; }
+    ideas.forEach(idea => {
+      const div = document.createElement('div');
+      div.className = 'goal-card';
+      const tag = idea.score === 3
+        ? '<span class="pill-tag pill-ready">Klaar</span>'
+        : '<span class="pill-tag pill-progress">' + idea.score + '/3</span>';
+      div.innerHTML =
+        '<div class="goal-top"><span class="goal-name">' + idea.name + '</span>' + tag + '</div>' +
+        '<div class="row-sub" style="margin-bottom:6px">' + idea.pitch + '</div>' +
+        '<div class="goal-actions"><button class="mini-btn" data-id="' + idea.id + '">verwijderen</button></div>';
+      wrap.appendChild(div);
+    });
+    wrap.querySelectorAll('.mini-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        save(K, load(K, []).filter(i => i.id !== btn.dataset.id));
+        render(); window.dispatchEvent(new Event('btl:refresh'));
+      });
+    });
+  }
+
+  document.getElementById('ideaAdd').addEventListener('click', () => {
+    const name = document.getElementById('ideaName').value.trim();
+    const pitch = document.getElementById('ideaPitch').value.trim();
+    if (!name) return;
+    const hasP = document.getElementById('ideaP').checked;
+    const hasC = document.getElementById('ideaC').checked;
+    const hasPr = document.getElementById('ideaPr').checked;
+    const score = [hasP, hasC, hasPr].filter(Boolean).length;
+    const ideas = load(K, []);
+    ideas.push({ id: uid(), name, pitch, score });
+    save(K, ideas);
+    document.getElementById('ideaName').value = '';
+    document.getElementById('ideaPitch').value = '';
+    document.getElementById('ideaP').checked = false;
+    document.getElementById('ideaC').checked = false;
+    document.getElementById('ideaPr').checked = false;
+    render();
+    window.dispatchEvent(new Event('btl:refresh'));
+  });
+
+  render();
+  window.addEventListener('btl:refresh', render);
+})();
+
+/* =================================================================
+   05 — DAILY HUSTLE CHECKLIST
+   ================================================================= */
+(function () {
+  const TASKS_K = 'btl:tasks';
+  const STATE_K = 'btl:taskstate';
+  const HIST_K = 'btl:taskhistory';
+  const list = document.getElementById('taskList');
+  const streakEl = document.getElementById('streakNum');
+
+  if (load(TASKS_K, null) === null) {
+    save(TASKS_K, [
+      { id: uid(), text: '50 vrije worpen' },
+      { id: uid(), text: '1 verkoop of uitgave bijhouden' },
+      { id: uid(), text: '10 min stretchen / herstel' }
+    ]);
+  }
+
+  function rolloverDay() {
+    const state = load(STATE_K, { date: todayStr(), done: {} });
+    if (state.date !== todayStr()) {
+      const tasks = load(TASKS_K, []);
+      const hist = load(HIST_K, {});
+      if (tasks.length > 0) {
+        const allDone = tasks.every(t => state.done[t.id]);
+        hist[state.date] = allDone;
+        save(HIST_K, hist);
+      }
+      save(STATE_K, { date: todayStr(), done: {} });
+    }
+  }
+
+  function calcStreak() {
+    const hist = load(HIST_K, {});
+    const state = load(STATE_K, { date: todayStr(), done: {} });
+    const tasks = load(TASKS_K, []);
+    const todayDone = tasks.length > 0 && tasks.every(t => state.done[t.id]);
+    let d = new Date();
+    if (!todayDone) d.setDate(d.getDate() - 1);
+    let streak = 0;
+    while (true) {
+      const key = d.toISOString().slice(0, 10);
+      if (hist[key]) { streak++; d.setDate(d.getDate() - 1); } else break;
+    }
+    return streak;
+  }
+
+  function render() {
+    rolloverDay();
+    const tasks = load(TASKS_K, []);
+    const state = load(STATE_K, { date: todayStr(), done: {} });
+    list.innerHTML = '';
+    if (tasks.length === 0) { list.innerHTML = '<li class="empty">Geen taken. Voeg er eentje toe.</li>'; }
+    tasks.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'row';
+      const checked = !!state.done[t.id];
+      li.innerHTML =
+        '<input type="checkbox" class="checkbox" data-id="' + t.id + '" ' + (checked ? 'checked' : '') + '>' +
+        '<div class="row-main" style="' + (checked ? 'text-decoration:line-through;opacity:0.6' : '') + '">' + t.text + '</div>' +
+        '<button class="row-del" data-del="' + t.id + '">×</button>';
+      list.appendChild(li);
+    });
+    list.querySelectorAll('.checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const st = load(STATE_K, { date: todayStr(), done: {} });
+        st.done[cb.dataset.id] = cb.checked;
+        save(STATE_K, st);
+        streakEl.textContent = calcStreak();
+        render();
+        window.dispatchEvent(new Event('btl:refresh'));
+      });
+    });
+    list.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        save(TASKS_K, load(TASKS_K, []).filter(t => t.id !== btn.dataset.del));
+        render();
+        window.dispatchEvent(new Event('btl:refresh'));
+      });
+    });
+    streakEl.textContent = calcStreak();
+  }
+
+  document.getElementById('taskAdd').addEventListener('click', () => {
+    const text = document.getElementById('taskText').value.trim();
+    if (!text) return;
+    const tasks = load(TASKS_K, []);
+    tasks.push({ id: uid(), text });
+    save(TASKS_K, tasks);
+    document.getElementById('taskText').value = '';
+    render();
+  });
+
+  render();
+  window.addEventListener('btl:refresh', render);
+})();
+
+/* =================================================================
+   06 — PROFIT GOAL (reads Hustle Ledger, current month)
+   ================================================================= */
+(function () {
+  const K = 'btl:profitgoal';
+  const stats = document.getElementById('profitStats');
+  const bar = document.getElementById('profitBar');
+  const input = document.getElementById('profitTarget');
+
+  function render() {
+    const goal = load(K, { target: 20 });
+    input.value = goal.target;
+    const items = load('btl:ledger', []).filter(i => i.date.slice(0, 7) === monthStr());
+    const net = items.filter(i => i.type === 'in').reduce((a, b) => a + b.amount, 0)
+      - items.filter(i => i.type === 'out').reduce((a, b) => a + b.amount, 0);
+    const pct = goal.target > 0 ? Math.max(0, Math.min(100, Math.round((net / goal.target) * 100))) : 0;
+    stats.innerHTML =
+      '<div class="stat"><div class="stat-num ' + (net >= 0 ? 'good' : 'bad') + '">' + euro(net) + '</div><div class="stat-label">Winst deze maand</div></div>' +
+      '<div class="stat"><div class="stat-num">' + euro(goal.target) + '</div><div class="stat-label">Doel</div></div>' +
+      '<div class="stat"><div class="stat-num">' + pct + '%</div><div class="stat-label">Behaald</div></div>';
+    bar.style.width = pct + '%';
+    bar.className = 'bar-fill' + (net < 0 ? ' bad' : pct < 50 ? ' warn' : '');
+  }
+
+  document.getElementById('profitSave').addEventListener('click', () => {
+    const target = parseFloat(input.value);
+    if (isNaN(target) || target <= 0) return;
+    save(K, { target });
+    render();
+  });
+
+  render();
+  window.addEventListener('btl:refresh', render);
+})();
+
+/* =================================================================
+   07 — SALES LOG / CRM
+   ================================================================= */
+(function () {
+  const K = 'btl:sales';
+  const list = document.getElementById('salesList');
+  const stats = document.getElementById('salesStats');
+
+  function render() {
+    const items = load(K, []);
+    const total = items.reduce((a, b) => a + b.amount, 0);
+    const followups = items.filter(i => i.followup).length;
+    stats.innerHTML =
+      '<div class="stat"><div class="stat-num">' + items.length + '</div><div class="stat-label">Verkopen</div></div>' +
+      '<div class="stat"><div class="stat-num good">' + euro(total) + '</div><div class="stat-label">Totaal omzet</div></div>' +
+      '<div class="stat"><div class="stat-num warn">' + followups + '</div><div class="stat-label">Op te volgen</div></div>';
+
+    list.innerHTML = '';
+    if (items.length === 0) { list.innerHTML = '<li class="empty">Nog geen verkoop gelogd.</li>'; return; }
+    items.slice().reverse().forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'row';
+      li.innerHTML =
+        '<input type="checkbox" class="checkbox" data-fid="' + item.id + '" title="opvolgen" ' + (item.followup ? 'checked' : '') + '>' +
+        '<div class="row-main">' + item.client + ' — ' + item.item + '<div class="row-sub">' + item.date + '</div></div>' +
+        '<div class="row-amt in">' + euro(item.amount) + '</div>' +
+        '<button class="row-del" data-id="' + item.id + '">×</button>';
+      list.appendChild(li);
+    });
+    list.querySelectorAll('[data-fid]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const items2 = load(K, []);
+        const it = items2.find(i => i.id === cb.dataset.fid);
+        if (it) { it.followup = cb.checked; save(K, items2); render(); }
+      });
+    });
+    list.querySelectorAll('.row-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        save(K, load(K, []).filter(i => i.id !== btn.dataset.id));
+        render(); window.dispatchEvent(new Event('btl:refresh'));
+      });
+    });
+  }
+
+  document.getElementById('saleAdd').addEventListener('click', () => {
+    const client = document.getElementById('saleClient').value.trim();
+    const item = document.getElementById('saleItem').value.trim();
+    const amount = parseFloat(document.getElementById('saleAmt').value);
+    if (!client || !item || !amount || amount <= 0) return;
+    const items = load(K, []);
+    items.push({ id: uid(), client, item, amount, date: todayStr(), followup: false });
+    save(K, items);
+    document.getElementById('saleClient').value = '';
+    document.getElementById('saleItem').value = '';
+    document.getElementById('saleAmt').value = '';
+    render();
+    window.dispatchEvent(new Event('btl:refresh'));
+  });
+
+  render();
+  window.addEventListener('btl:refresh', render);
+})();
+
+/* =================================================================
+   08 — BALANCE METER
+   ================================================================= */
+(function () {
+  const K = 'btl:balance';
+  const ball = document.getElementById('balBall');
+  const biz = document.getElementById('balBiz');
+  const rest = document.getElementById('balRest');
+  const bar = document.getElementById('balanceBar');
+
+  function render() {
+    const v = load(K, { ball: 0, biz: 0, rest: 0 });
+    ball.value = v.ball || '';
+    biz.value = v.biz || '';
+    rest.value = v.rest || '';
+    const total = (v.ball || 0) + (v.biz || 0) + (v.rest || 0);
+    const pb = total > 0 ? Math.round((v.ball / total) * 100) : 0;
+    const pbiz = total > 0 ? Math.round((v.biz / total) * 100) : 0;
+    const pr = total > 0 ? Math.max(0, 100 - pb - pbiz) : 0;
+    document.getElementById('balBallPct').textContent = pb + '%';
+    document.getElementById('balBizPct').textContent = pbiz + '%';
+    document.getElementById('balRestPct').textContent = pr + '%';
+    bar.innerHTML =
+      '<div class="stack-seg" style="width:' + pb + '%;background:#7CEFB9"></div>' +
+      '<div class="stack-seg" style="width:' + pbiz + '%;background:#F2C063"></div>' +
+      '<div class="stack-seg" style="width:' + pr + '%;background:#5B7A6E"></div>';
+  }
+
+  function onChange() {
+    save(K, {
+      ball: parseFloat(ball.value) || 0,
+      biz: parseFloat(biz.value) || 0,
+      rest: parseFloat(rest.value) || 0
+    });
+    render();
+    window.dispatchEvent(new Event('btl:refresh'));
+  }
+  [ball, biz, rest].forEach(el => el.addEventListener('input', onChange));
+
+  render();
+})();
+
+/* =================================================================
+   09 — PRICE CALCULATOR
+   ================================================================= */
+(function () {
+  const K = 'btl:pricecalc';
+  const cost = document.getElementById('calcCost');
+  const margin = document.getElementById('calcMargin');
+  const qty = document.getElementById('calcQty');
+  const out = document.getElementById('calcOut');
+
+  function render() {
+    const c = parseFloat(cost.value) || 0;
+    const m = parseFloat(margin.value) || 0;
+    const q = parseFloat(qty.value) || 0;
+    const price = c * (1 + m / 100);
+    const profitEach = price - c;
+    const totalProfit = profitEach * q;
+    out.innerHTML =
+      '<div class="stat"><div class="stat-num">' + euro(price) + '</div><div class="stat-label">Verkoopprijs / stuk</div></div>' +
+      '<div class="stat"><div class="stat-num good">' + euro(profitEach) + '</div><div class="stat-label">Winst / stuk</div></div>' +
+      '<div class="stat"><div class="stat-num good">' + euro(totalProfit) + '</div><div class="stat-label">Totale winst (' + (q || 0) + 'x)</div></div>';
+  }
+
+  [cost, margin, qty].forEach(el => el.addEventListener('input', () => { save(K, { cost: cost.value, margin: margin.value, qty: qty.value }); render(); }));
+
+  const saved = load(K, null);
+  if (saved) { cost.value = saved.cost || ''; margin.value = saved.margin || ''; qty.value = saved.qty || ''; }
+  render();
+})();
+
+/* =================================================================
+   10 — TROPHY WALL (reads every module above)
+   ================================================================= */
+(function () {
+  const grid = document.getElementById('badgeGrid');
+
+  function render() {
+    const ledger = load('btl:ledger', []);
+    const goals = load('btl:goals', []);
+    const shots = load('btl:shots', []);
+    const ideas = load('btl:ideas', []);
+    const sales = load('btl:sales', []);
+    const taskHist = load('btl:taskhistory', {});
+
+    const ledgerNet = ledger.filter(i => i.type === 'in').reduce((a, b) => a + b.amount, 0)
+      - ledger.filter(i => i.type === 'out').reduce((a, b) => a + b.amount, 0);
+    const attempts = shots.reduce((a, b) => a + b.attempts, 0);
+    const makes = shots.reduce((a, b) => a + b.makes, 0);
+    const fgPct = attempts > 0 ? (makes / attempts) * 100 : 0;
+    const streakDays = Object.values(taskHist).filter(Boolean).length;
+    const bestGoalPct = goals.reduce((max, g) => g.target > 0 ? Math.max(max, g.saved / g.target) : max, 0);
+
+    const badges = [
+      { name: 'Eerste verkoop', desc: 'Log je eerste klant in de Sales Log.', unlocked: sales.length >= 1 },
+      { name: 'Winst maker', desc: 'Sta in de plus in je Hustle Ledger.', unlocked: ledgerNet > 0 },
+      { name: 'Spaarder', desc: 'Eén spaarpotje minstens halfvol.', unlocked: bestGoalPct >= 0.5 },
+      { name: 'Century club', desc: '100 schoten gelogd in de Shot Tracker.', unlocked: attempts >= 100 },
+      { name: 'Sharpshooter', desc: '50%+ trefkans over 20+ schoten.', unlocked: attempts >= 20 && fgPct >= 50 },
+      { name: 'Idea machine', desc: '3 of meer ideeën in de Idea Vault.', unlocked: ideas.length >= 3 },
+      { name: 'Pitch klaar', desc: 'Eén idee met probleem, klant én prijs.', unlocked: ideas.some(i => i.score === 3) },
+      { name: '3-daagse streak', desc: '3 dagen op rij de Daily Hustle afgewerkt.', unlocked: streakDays >= 3 }
+    ];
+
+    grid.innerHTML = badges.map(b =>
+      '<div class="badge ' + (b.unlocked ? 'unlocked' : '') + '">' +
+      '<div class="badge-name">' + b.name + '</div>' +
+      '<div class="badge-desc">' + b.desc + '</div>' +
+      '</div>'
+    ).join('');
+  }
+
+  render();
+  window.addEventListener('btl:refresh', render);
+})();
+</script>
+</body>
+</html>
