@@ -22,12 +22,12 @@
   // -------- CSS --------
   const css = `
 .topbar {
-  position: sticky; top: max(10px, env(safe-area-inset-top)); z-index: 40;
-  display: flex; justify-content: flex-end; align-items: center;
+  position: sticky; top: max(8px, env(safe-area-inset-top)); z-index: 40;
+  display: flex; justify-content: space-between; align-items: center;
   gap: 8px;
-  margin: 0 max(10px, env(safe-area-inset-right)) 14px max(10px, env(safe-area-inset-left));
-  padding: 9px 11px;
-  border-radius: 18px;
+  margin: 0 max(8px, env(safe-area-inset-right)) 8px max(8px, env(safe-area-inset-left));
+  padding: 6px 6px 6px 7px;
+  border-radius: 16px;
   background: linear-gradient(165deg, rgba(124,239,185,0.08), rgba(8,14,12,0.55));
   border: 1px solid rgba(255,255,255,0.13);
   border-top-color: rgba(255,255,255,0.28);
@@ -46,22 +46,42 @@
   background: radial-gradient(ellipse 140% 70% at 25% -20%, rgba(255,255,255,0.18), transparent 60%);
   mix-blend-mode: screen; pointer-events: none;
 }
+.topbar-left { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+.topbar-back {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05);
+  color: #FAFAFA; cursor: pointer; padding: 0;
+  -webkit-tap-highlight-color: transparent; transition: background 0.15s;
+}
+.topbar-back:hover { background: rgba(255,255,255,0.09); }
+.topbar-back svg { width: 16px; height: 16px; }
+.topbar-brand { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; overflow: hidden; }
+.topbar-brand-title {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.01em; color: #FAFAFA;
+  white-space: nowrap;
+}
+.topbar-brand-sub {
+  font-size: 9.5px; color: rgba(255,255,255,0.45); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.topbar-right { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
 .topbar-water-wrap {
   display: flex; align-items: stretch;
 }
 .topbar-water-pill {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 9px 14px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
   background: rgba(125, 211, 252, 0.08);
   border: 1px solid rgba(125, 211, 252, 0.16);
   border-right: none;
-  border-radius: 12px 0 0 12px;
+  border-radius: 10px 0 0 10px;
   text-decoration: none;
   color: #FAFAFA;
   -webkit-tap-highlight-color: transparent;
 }
 .topbar-water-pill .topbar-pill-dot {
-  width: 8px; height: 8px; border-radius: 50%;
+  width: 7px; height: 7px; border-radius: 50%;
   background: #7DD3FC; flex-shrink: 0;
 }
 .topbar-water-pill.warn .topbar-pill-dot { background: #fbbf24; }
@@ -75,19 +95,19 @@
 }
 .topbar-pill-count {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 13px; font-weight: 700;
+  font-size: 11.5px; font-weight: 700;
   color: #FAFAFA;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .topbar-water-add {
-  width: 44px;
+  width: 32px;
   border: 1px solid rgba(125, 211, 252, 0.16);
   background: linear-gradient(180deg, rgba(125, 211, 252, 0.28), rgba(110, 231, 183, 0.28));
   color: #FFFFFF;
-  font-family: inherit; font-size: 20px; font-weight: 700; line-height: 1;
+  font-family: inherit; font-size: 16px; font-weight: 700; line-height: 1;
   cursor: pointer;
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 10px 10px 0;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s, transform 0.10s;
 }
@@ -97,10 +117,10 @@
 }
 .topbar-finance-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 44px; height: 42px;
+  width: 32px; height: 30px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   background: rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
+  border-radius: 10px;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s;
@@ -110,15 +130,15 @@
   display: inline-flex; line-height: 1; color: #FAFAFA;
   opacity: 0.85;
 }
-.topbar-finance-icon svg { width: 19px; height: 19px; }
+.topbar-finance-icon svg { width: 16px; height: 16px; }
 
 /* Bottom tab bar — floating liquid glass pill */
 .bottombar {
   position: fixed; left: max(14px, env(safe-area-inset-left)); right: max(14px, env(safe-area-inset-right));
-  bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40;
+  bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 40;
   display: flex; justify-content: space-around; align-items: stretch;
-  padding: 7px 6px;
-  border-radius: 22px;
+  padding: 4px 5px;
+  border-radius: 18px;
   background: linear-gradient(165deg, rgba(124,239,185,0.10), rgba(8,14,12,0.58));
   border: 1px solid rgba(255,255,255,0.14);
   border-top-color: rgba(255,255,255,0.30);
@@ -140,12 +160,12 @@
 .bottombar-tab {
   flex: 1; position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px;
-  padding: 7px 0 5px;
-  border-radius: 16px;
+  gap: 2px;
+  padding: 5px 0 4px;
+  border-radius: 13px;
   text-decoration: none;
   color: rgba(255, 255, 255, 0.45);
-  font-size: 10px; font-weight: 600;
+  font-size: 9px; font-weight: 600;
   letter-spacing: 0.04em;
   -webkit-tap-highlight-color: transparent;
   transition: color 0.15s, background 0.15s;
@@ -155,7 +175,7 @@
   opacity: 0.55;
   transition: opacity 0.15s, transform 0.10s;
 }
-.bottombar-tab-icon svg { width: 22px; height: 22px; }
+.bottombar-tab-icon svg { width: 18px; height: 18px; }
 .bottombar-tab.active {
   color: #7CEFB9;
   background: rgba(124, 239, 185, 0.10);
@@ -168,18 +188,19 @@
 
 /* Push page content above the floating bottom bar */
 body.has-bottombar {
-  padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important;
 }
 
 @media (max-width: 480px) {
-  .topbar { padding-left: 10px; padding-right: 10px; gap: 6px; }
-  .topbar-water-pill { padding: 8px 11px; gap: 6px; }
-  .topbar-pill-count { font-size: 12px; }
-  .topbar-water-add { width: 40px; font-size: 18px; }
-  .topbar-finance-btn { width: 40px; height: 38px; }
-  .topbar-finance-icon svg { width: 17px; height: 17px; }
-  .bottombar-tab-icon svg { width: 20px; height: 20px; }
-  .bottombar-tab { font-size: 10px; }
+  .topbar { padding-left: 6px; padding-right: 5px; gap: 6px; }
+  .topbar-brand-sub { max-width: 30vw; }
+  .topbar-water-pill { padding: 5px 8px; gap: 5px; }
+  .topbar-pill-count { font-size: 11px; }
+  .topbar-water-add { width: 28px; font-size: 14px; }
+  .topbar-finance-btn { width: 28px; height: 26px; }
+  .topbar-finance-icon svg { width: 14px; height: 14px; }
+  .bottombar-tab-icon svg { width: 17px; height: 17px; }
+  .bottombar-tab { font-size: 8.5px; }
 }
 
 /* === Global mobile lockdown ===
@@ -231,16 +252,27 @@ body.topbar-modal-open {
   // -------- HTML --------
   const topbarHtml = `
 <header class="topbar" id="topbar" role="navigation" aria-label="Quick actions">
-  <div class="topbar-water-wrap">
-    <a href="health.html#water" class="topbar-water-pill" id="topbarWater" aria-label="Water progress">
-      <span class="topbar-pill-dot"></span>
-      <span class="topbar-pill-count" id="topbarWaterCount">0/0</span>
-    </a>
-    <button class="topbar-water-add" id="topbarWaterAdd" aria-label="Log one drink" type="button">+</button>
+  <div class="topbar-left">
+    <button class="topbar-back" id="topbarBack" aria-label="Go back" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="topbar-brand">
+      <span class="topbar-brand-title">LifeOS</span>
+      <span class="topbar-brand-sub">Dashboard from Fenne</span>
+    </div>
   </div>
-  <a href="finance.html" class="topbar-finance-btn" id="topbarFinance" aria-label="Finance">
-    <span class="topbar-finance-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="20" x2="4" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="9"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span>
-  </a>
+  <div class="topbar-right">
+    <div class="topbar-water-wrap">
+      <a href="health.html#water" class="topbar-water-pill" id="topbarWater" aria-label="Water progress">
+        <span class="topbar-pill-dot"></span>
+        <span class="topbar-pill-count" id="topbarWaterCount">0/0</span>
+      </a>
+      <button class="topbar-water-add" id="topbarWaterAdd" aria-label="Log one drink" type="button">+</button>
+    </div>
+    <a href="finance.html" class="topbar-finance-btn" id="topbarFinance" aria-label="Finance">
+      <span class="topbar-finance-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="20" x2="4" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="9"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span>
+    </a>
+  </div>
 </header>
 `;
 
@@ -281,6 +313,15 @@ body.topbar-modal-open {
     if (p.endsWith('gym.html')) return 'fitness';
     return 'main'; // index.html, /, or anything else falls back to main
   }
+  // The hub itself has nowhere to go "back" to within the app.
+  function isIndexPage() {
+    const p = (window.location.pathname || '').toLowerCase();
+    return p === '/' || p.endsWith('/index.html') || p.endsWith('index.html') || p === '';
+  }
+  function goBack() {
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = 'index.html';
+  }
 
   function injectStyleAndHTML() {
     if (document.getElementById('topbar') || document.getElementById('bottombar')) return;
@@ -304,6 +345,12 @@ body.topbar-modal-open {
     document.querySelectorAll('.bottombar-tab').forEach((t) => {
       t.classList.toggle('active', t.getAttribute('data-page') === active);
     });
+
+    // The hub page has nowhere to go "back" to — hide the back arrow there.
+    if (isIndexPage()) {
+      const backBtn = document.getElementById('topbarBack');
+      if (backBtn) backBtn.style.display = 'none';
+    }
 
     // Reserve room above the fixed bottom bar so page content can scroll
     // past it without being hidden.
@@ -501,6 +548,8 @@ body.topbar-modal-open {
     injectStyleAndHTML();
     const btn = document.getElementById('topbarWaterAdd');
     if (btn) btn.addEventListener('click', (e) => { e.preventDefault(); addWater(); });
+    const backBtn = document.getElementById('topbarBack');
+    if (backBtn) backBtn.addEventListener('click', (e) => { e.preventDefault(); goBack(); });
     render();
     lockGestures();
     startModalLock();
