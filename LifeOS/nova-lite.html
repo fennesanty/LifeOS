@@ -74,6 +74,7 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
 .tag { display: inline-block; margin-bottom: 9px; font-family: ui-monospace, monospace; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #04140d; background: var(--accent); padding: 3px 9px; border-radius: 999px; }
 .bubble b, .pill { color: var(--accent); font-weight: 700; }
 .pill { background: color-mix(in srgb, var(--accent) 18%, transparent); padding: 1px 7px; border-radius: 6px; font-weight: 600; }
+.nova-action-log { margin-top: 8px; padding: 6px 10px; background: rgba(107,227,164,0.10); border: 1px solid rgba(107,227,164,0.20); border-radius: 8px; font-size: 11px; color: var(--accent); font-family: var(--font-mono); }
 .reply-list { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 6px; }
 .reply-list li { line-height: 1.45; }
 .dots { display: inline-flex; gap: 5px; } .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: .4; animation: d 1.2s ease-in-out infinite; }
@@ -207,6 +208,50 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
     keypanel.classList.remove('open'); // tuck it away so it's not on screen
   });
 
+  // ---- Nova dashboard actions ----
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function executeNovaActions(reply) {
+    const results = [];
+    const tokens = reply.match(/\{\{[^}]+\}\}/g) || [];
+    for (const token of tokens) {
+      const inner = token.slice(2, -2).trim();
+      try {
+        if (inner === 'addWater') {
+          const s = JSON.parse(localStorage.getItem('po_water_v1') || '{}');
+          s.logs = s.logs || {};
+          const k = todayKey();
+          s.logs[k] = (s.logs[k] || 0) + 1;
+          localStorage.setItem('po_water_v1', JSON.stringify(s));
+          results.push('Water gelogd (' + s.logs[k] + 'x vandaag)');
+        } else if (inner.startsWith('weight:')) {
+          const kg = parseFloat(inner.slice(7));
+          if (kg > 20 && kg < 350) {
+            const arr = JSON.parse(localStorage.getItem('po_coach_weights') || '[]');
+            const k = todayKey();
+            const idx = arr.findIndex(e => e.dateKey === k);
+            if (idx !== -1) arr[idx].weight = kg;
+            else arr.push({ dateKey: k, weight: kg });
+            arr.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+            localStorage.setItem('po_coach_weights', JSON.stringify(arr));
+            results.push('Gewicht gelogd: ' + kg + ' kg');
+          }
+        } else if (inner.startsWith('logEntry:')) {
+          const parts = inner.slice(9).split('|');
+          const title = (parts[0] || '').trim();
+          const text  = (parts[1] || title).trim();
+          const entries = JSON.parse(localStorage.getItem('logboek_v1') || '[]');
+          entries.push({ id: Date.now().toString(36), dateKey: todayKey(), title, text, mood: 'ok', ts: Date.now() });
+          localStorage.setItem('logboek_v1', JSON.stringify(entries));
+          results.push('Logboek entry opgeslagen');
+        }
+      } catch(e) {}
+    }
+    return results;
+  }
+
   // ---- read whatever the dashboard stored (for context) ----
   function dashboardData(){
     const out = {};
@@ -252,6 +297,13 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
     "Answer in short bullet points starting with '- ', few words each, plain language. " +
     "Wrap key words and numbers in **double asterisks**. " +
     "End with one '- Do today:' bullet giving the single action. " +
+    "\n\nACTIONS: You can modify the dashboard by embedding action tokens in your response. " +
+    "Embed them ONLY when the user explicitly asks you to update data, or you recommend tracking something right now. " +
+    "Available tokens (embed exactly as shown, they execute silently and are hidden from display):\n" +
+    "  {{addWater}} — logs +1 drink of water today\n" +
+    "  {{weight:XX.X}} — logs body weight in kg, replace XX.X with the number\n" +
+    "  {{logEntry:Title|Body text}} — saves a note to the user's logboek (| separates title from text)\n" +
+    "When you use an action, mention it briefly in your text response too (e.g. '- Logged 75.2 kg for you.').\n\n" +
     "Dashboard data as JSON:\n";
 
   let busy = false;
@@ -276,8 +328,10 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
       });
       const json = await res.json();
       if (json.error){ loading.querySelector('div:last-child').innerHTML = render('- ' + (json.error.message || 'Something went wrong — check your API key.')); setOrb(''); busy = false; return; }
-      const reply = json.text || 'Hmm, no reply.';
-      loading.querySelector('div:last-child').innerHTML = render(reply);
+      let reply = json.text || 'Hmm, no reply.';
+      const actionResults = executeNovaActions(reply);
+      reply = reply.replace(/\{\{[^}]+\}\}/g, '').trim();
+      loading.querySelector('div:last-child').innerHTML = render(reply) + (actionResults.length ? '<div class="nova-action-log">' + actionResults.map(r => '&#10003; ' + r).join(' &middot; ') + '</div>' : '');
       setOrb('happy'); setTimeout(() => setOrb(''), 2500);
     } catch(e){
       loading.querySelector('div:last-child').innerHTML = render('- Could not reach NVIDIA — check your connection and key.');

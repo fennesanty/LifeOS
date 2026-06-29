@@ -279,7 +279,7 @@ body.topbar-modal-open {
   </div>
   <div class="topbar-right">
     <div class="topbar-water-wrap">
-      <a href="health.html#water" class="topbar-water-pill" id="topbarWater" aria-label="Water progress">
+      <a href="body.html" class="topbar-water-pill" id="topbarWater" aria-label="Water progress">
         <span class="topbar-pill-dot"></span>
         <span class="topbar-pill-count" id="topbarWaterCount">0/0</span>
       </a>
@@ -298,13 +298,13 @@ body.topbar-modal-open {
     <span class="bottombar-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg></span>
     <span>Main</span>
   </a>
-  <a href="health.html" class="bottombar-tab" data-page="health">
-    <span class="bottombar-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 20.5 3.5 13.5a5 5 0 1 1 7-7l7 7a5 5 0 1 1-7 7Z"/><path d="M8.5 8.5l7 7"/></svg></span>
-    <span>Health</span>
+  <a href="body.html" class="bottombar-tab" data-page="body">
+    <span class="bottombar-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/><path d="M7 21v-2a5 5 0 0 1 10 0v2"/><path d="M5 9h14"/></svg></span>
+    <span>Body</span>
   </a>
-  <a href="gym.html" class="bottombar-tab" data-page="fitness">
-    <span class="bottombar-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10"/><path d="M4 9v6"/><path d="M18 7v10"/><path d="M20 9v6"/><path d="M6 12h12"/></svg></span>
-    <span>Fitness</span>
+  <a href="nova-lite.html" class="bottombar-tab" data-page="nova">
+    <span class="bottombar-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></span>
+    <span>Nova</span>
   </a>
 </nav>
 `;
@@ -325,8 +325,8 @@ body.topbar-modal-open {
   }
   function currentPageKey() {
     const p = (window.location.pathname || '').toLowerCase();
-    if (p.endsWith('health.html')) return 'health';
-    if (p.endsWith('gym.html')) return 'fitness';
+    if (p.endsWith('body.html')) return 'body';
+    if (p.endsWith('nova-lite.html')) return 'nova';
     return 'main'; // index.html, /, or anything else falls back to main
   }
   // The hub itself has nowhere to go "back" to within the app.

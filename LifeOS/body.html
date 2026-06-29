@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="lock.js"></script>
+<script src="/api/config"></script>
+<link rel="stylesheet" href="theme.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1410">
+<title>Body · Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<style>
+:root {
+  --bg: #0A1410;
+  --text-primary: #EAEFEA;
+  --text-secondary: #9fb3a9;
+  --text-tertiary: #6E827A;
+  --accent: #6BE3A4;
+  --warn: #F2C063;
+  --line: rgba(124,239,185,0.16);
+  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+  --font-head: 'Space Grotesk', var(--font);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text-secondary); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+body {
+  min-height: 100vh; position: relative; overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 18px 90px;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 82% 14%, rgba(124,239,185,0.14), transparent 45%),
+    radial-gradient(circle at 18% 90%, rgba(124,239,185,0.06), transparent 50%);
+  filter: blur(40px); pointer-events: none; z-index: -2;
+  animation: drift 36s ease-in-out infinite alternate;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(124,239,185,0.02) 1px, transparent 1px);
+  background-size: 3px 3px; pointer-events: none; z-index: -1;
+}
+@keyframes drift { 0%{transform:translate3d(0,0,0)} 100%{transform:translate3d(-22px,14px,0)} }
+
+.page { max-width: 720px; margin: 0 auto; }
+.page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.back-btn {
+  border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04);
+  color: var(--text-primary); border-radius: 10px; padding: 8px 13px;
+  font-size: 16px; opacity: 0.6; transition: opacity 0.15s; text-decoration: none;
+  display: inline-flex; align-items: center;
+}
+.back-btn:hover { opacity: 1; }
+.page-title {
+  margin: 0; font-family: var(--font-head); font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+  background: linear-gradient(180deg,#FFFFFF 0%,#C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.section-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-tertiary); margin: 0 0 10px;
+}
+.glass {
+  background: linear-gradient(165deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 45%, rgba(0,0,0,0.06) 100%);
+  border: 1px solid rgba(255,255,255,0.12); border-top-color: rgba(255,255,255,0.30);
+  backdrop-filter: blur(22px) saturate(1.35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 16px 44px rgba(0,0,0,0.45);
+  border-radius: 20px; padding: 20px; margin-bottom: 18px;
+}
+
+/* ---- Weight ---- */
+.wt-hero { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+.wt-num { font-family: var(--font-mono); font-size: 48px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1; }
+.wt-unit { font-size: 18px; color: var(--text-tertiary); }
+.wt-delta { font-family: var(--font-mono); font-size: 13px; font-weight: 700; margin-left: 4px; }
+.wt-delta.up { color: var(--warn); }
+.wt-delta.down { color: var(--accent); }
+.wt-date { font-size: 11px; color: var(--text-tertiary); margin-bottom: 14px; }
+.chart-wrap { margin: 0 -4px 14px; }
+.chart-svg { width: 100%; display: block; }
+.chart-empty { text-align: center; padding: 28px 0; font-size: 13px; color: var(--text-tertiary); font-style: italic; margin-bottom: 14px; }
+.wt-input-row { display: flex; gap: 8px; }
+.wt-input {
+  flex: 1; padding: 11px 13px; border: 1px solid rgba(255,255,255,0.08); border-radius: 11px;
+  background: rgba(0,0,0,0.25); color: var(--text-primary); font-family: var(--font-mono); font-size: 15px;
+  outline: none; transition: border-color 0.2s;
+}
+.wt-input:focus { border-color: rgba(107,227,164,0.45); }
+.wt-save {
+  border: 0; border-radius: 11px; padding: 0 18px; background: var(--accent); color: #04140d;
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; transition: filter 0.15s;
+}
+.wt-save:hover { filter: brightness(1.08); }
+.wt-history { margin-top: 12px; display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto; }
+.wt-entry { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: rgba(255,255,255,0.04); border-radius: 9px; }
+.wt-entry-date { font-size: 11.5px; color: var(--text-tertiary); font-family: var(--font-mono); }
+.wt-entry-val { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.wt-entry-del { border: 0; background: transparent; color: var(--text-tertiary); font-size: 14px; cursor: pointer; opacity: 0.4; transition: opacity 0.15s, color 0.15s; }
+.wt-entry-del:hover { opacity: 1; color: #FF6B6B; }
+
+/* ---- Water ---- */
+.water-hero { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.water-nums { display: flex; align-items: baseline; gap: 4px; }
+.water-count { font-family: var(--font-mono); font-size: 44px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+.water-sep { font-size: 22px; color: var(--text-tertiary); }
+.water-goal-num { font-family: var(--font-mono); font-size: 22px; color: var(--text-tertiary); }
+.water-add-btn {
+  margin-left: auto; border: 0; border-radius: 14px; width: 52px; height: 52px;
+  background: rgba(125,211,252,0.18); color: #7DD3FC; font-size: 26px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s, transform 0.1s; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.water-add-btn:hover { background: rgba(125,211,252,0.30); }
+.water-add-btn:active { transform: scale(0.92); }
+.water-remove-btn {
+  border: 0; border-radius: 10px; padding: 5px 12px;
+  background: rgba(255,255,255,0.04); color: var(--text-tertiary); font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s; font-family: var(--font);
+}
+.water-remove-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+.water-bar-track { height: 8px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
+.water-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #60A5FA, #7DD3FC); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
+.water-lbl-row { display: flex; justify-content: space-between; margin-top: 6px; }
+.water-lbl { font-size: 11px; color: var(--text-tertiary); }
+
+/* ---- Photos ---- */
+.photo-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.photo-add-btn {
+  border: 1px solid rgba(107,227,164,0.25); background: rgba(107,227,164,0.10);
+  color: var(--accent); border-radius: 10px; padding: 7px 14px;
+  font-family: var(--font); font-size: 12.5px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s;
+}
+.photo-add-btn:hover { background: rgba(107,227,164,0.18); }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+@media (max-width: 400px) { .photo-grid { grid-template-columns: repeat(2, 1fr); } }
+.photo-card {
+  position: relative; aspect-ratio: 3/4; border-radius: 12px; overflow: hidden;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+}
+.photo-card:hover { transform: scale(1.02); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.photo-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.photo-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 55%, rgba(0,0,0,0.75) 100%); }
+.photo-meta { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; }
+.photo-date { font-size: 10px; color: var(--accent); font-family: var(--font-mono); font-weight: 700; }
+.photo-wt { font-size: 10px; color: rgba(255,255,255,0.7); }
+.photo-del {
+  position: absolute; top: 6px; right: 6px; border: 0; background: rgba(0,0,0,0.55);
+  color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 12px;
+  cursor: pointer; display: none; align-items: center; justify-content: center;
+}
+.photo-card:hover .photo-del { display: flex; }
+.photo-del:hover { background: rgba(239,68,68,0.8); }
+.photo-empty { grid-column: 1/-1; text-align: center; padding: 40px 0; font-size: 13px; color: var(--text-tertiary); font-style: italic; }
+
+/* Photo viewer */
+.viewer-bg {
+  position: fixed; inset: 0; z-index: 300; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.88); backdrop-filter: blur(12px);
+}
+.viewer-bg.open { display: flex; }
+.viewer-img { max-width: min(90vw, 600px); max-height: 80vh; border-radius: 12px; object-fit: contain; }
+.viewer-close {
+  position: absolute; top: 20px; right: 20px; border: 0; background: rgba(255,255,255,0.10);
+  color: white; border-radius: 50%; width: 40px; height: 40px; font-size: 22px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.viewer-meta { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); text-align: center; }
+.viewer-date { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+.viewer-wt { font-size: 14px; font-weight: 700; color: white; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-head">
+    <a class="back-btn" href="index.html">←</a>
+    <h1 class="page-title">Body</h1>
+  </div>
+
+  <!-- WEIGHT -->
+  <div class="section-label">GEWICHT</div>
+  <div class="glass">
+    <div class="wt-hero">
+      <span class="wt-num" id="wtNum">—</span>
+      <span class="wt-unit">kg</span>
+      <span class="wt-delta" id="wtDelta"></span>
+    </div>
+    <div class="wt-date" id="wtDate">Nog geen metingen</div>
+    <div class="chart-wrap" id="chartWrap"></div>
+    <div class="wt-input-row">
+      <input class="wt-input" id="wtInput" type="number" step="0.1" min="30" max="250" placeholder="bijv. 75.4" inputmode="decimal">
+      <button class="wt-save" id="wtSave">Log</button>
+    </div>
+    <div class="wt-history" id="wtHistory"></div>
+  </div>
+
+  <!-- WATER -->
+  <div class="section-label">WATER VANDAAG</div>
+  <div class="glass">
+    <div class="water-hero">
+      <div class="water-nums">
+        <span class="water-count" id="waterCount">0</span>
+        <span class="water-sep">/</span>
+        <span class="water-goal-num" id="waterGoalNum">8</span>
+      </div>
+      <button class="water-remove-btn" id="waterRemoveBtn">−1</button>
+      <button class="water-add-btn" id="waterAddBtn">+</button>
+    </div>
+    <div class="water-bar-track"><div class="water-bar-fill" id="waterFill" style="width:0%"></div></div>
+    <div class="water-lbl-row">
+      <span class="water-lbl" id="waterLbl">0 ml gedronken</span>
+      <span class="water-lbl" id="waterLblGoal"></span>
+    </div>
+  </div>
+
+  <!-- PROGRESS PHOTOS -->
+  <div class="photo-head">
+    <div class="section-label" style="margin:0">PROGRESS FOTO'S</div>
+    <button class="photo-add-btn" id="addPhotoBtn">+ Foto toevoegen</button>
+  </div>
+  <div class="photo-grid" id="photoGrid"></div>
+  <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+</div>
+
+<!-- Photo viewer -->
+<div class="viewer-bg" id="viewerBg">
+  <button class="viewer-close" id="viewerClose">&times;</button>
+  <img class="viewer-img" id="viewerImg" src="" alt="">
+  <div class="viewer-meta">
+    <div class="viewer-date" id="viewerDate"></div>
+    <div class="viewer-wt" id="viewerWt"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const WT_KEY    = 'po_coach_weights';
+  const PHOTO_KEY = 'po_coach_photos';
+  const WATER_KEY = 'po_water_v1';
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function fmtDate(k) {
+    try { return new Date(k + 'T12:00:00').toLocaleDateString('nl-BE', { day:'numeric', month:'short', year:'2-digit' }); }
+    catch(e) { return k; }
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+  /* ===== WEIGHT ===== */
+  function loadWeights() {
+    try { const a = JSON.parse(localStorage.getItem(WT_KEY)); return Array.isArray(a) ? a.sort((a,b)=>a.dateKey.localeCompare(b.dateKey)) : []; }
+    catch(e) { return []; }
+  }
+  function saveWeights(arr) {
+    try { localStorage.setItem(WT_KEY, JSON.stringify(arr)); } catch(e) {}
+  }
+
+  function renderWeight() {
+    const entries = loadWeights();
+    const last = entries[entries.length-1];
+    const cutoff7 = new Date(); cutoff7.setDate(cutoff7.getDate()-7);
+    const prev7 = entries.filter(e => new Date(e.dateKey) < cutoff7).slice(-1)[0];
+
+    document.getElementById('wtNum').textContent = last ? last.weight.toFixed(1) : '—';
+    document.getElementById('wtDate').textContent = last ? 'Gelogd op ' + fmtDate(last.dateKey) : 'Nog geen metingen';
+
+    const deltaEl = document.getElementById('wtDelta');
+    if (last && prev7) {
+      const d = last.weight - prev7.weight;
+      deltaEl.textContent = (d > 0 ? '+' : '') + d.toFixed(1) + ' kg';
+      deltaEl.className = 'wt-delta ' + (d > 0 ? 'up' : 'down');
+    } else { deltaEl.textContent = ''; deltaEl.className = 'wt-delta'; }
+
+    renderChart(entries);
+    renderHistory(entries);
+  }
+
+  function renderChart(entries) {
+    const wrap = document.getElementById('chartWrap');
+    const last30 = entries.slice(-30);
+    if (last30.length < 2) {
+      wrap.innerHTML = '<div class="chart-empty">Log minstens 2 metingen om je grafiek te zien.</div>';
+      return;
+    }
+    const W = (wrap.clientWidth || 300) + 8, H = 110;
+    const vals = last30.map(e => e.weight);
+    const minV = Math.min(...vals) - 0.8, maxV = Math.max(...vals) + 0.8;
+    const px = i => (i / (last30.length - 1)) * (W - 20) + 10;
+    const py = v => H - 18 - ((v - minV) / (maxV - minV)) * (H - 30);
+    const pts = last30.map((e,i) => `${px(i).toFixed(1)},${py(e.weight).toFixed(1)}`).join(' ');
+    const areaPath = 'M ' + last30.map((e,i) => `${px(i).toFixed(1)},${py(e.weight).toFixed(1)}`).join(' L ')
+      + ` L ${px(last30.length-1).toFixed(1)},${H} L ${px(0).toFixed(1)},${H} Z`;
+    const gId = 'wg' + uid();
+    wrap.innerHTML = `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" style="height:${H}px;overflow:visible">
+      <defs>
+        <linearGradient id="${gId}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6BE3A4" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#6BE3A4" stop-opacity="0.01"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaPath}" fill="url(#${gId})"/>
+      <polyline points="${pts}" fill="none" stroke="#6BE3A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      ${last30.map((e,i) => {
+        const today = i===last30.length-1;
+        return `<circle cx="${px(i).toFixed(1)}" cy="${py(e.weight).toFixed(1)}" r="${today?4:2}" fill="${today?'#fff':'#6BE3A4'}" stroke="${today?'#6BE3A4':'none'}" stroke-width="${today?2:0}"/>`;
+      }).join('')}
+      <text x="10" y="${H-2}" font-size="9" fill="rgba(110,130,122,0.6)" font-family="monospace">${fmtDate(last30[0].dateKey)}</text>
+      <text x="${W-10}" y="${H-2}" font-size="9" fill="rgba(110,130,122,0.6)" font-family="monospace" text-anchor="end">${fmtDate(last30[last30.length-1].dateKey)}</text>
+    </svg>`;
+  }
+
+  function renderHistory(entries) {
+    const el = document.getElementById('wtHistory');
+    const recent = entries.slice().reverse().slice(0, 12);
+    if (!recent.length) { el.innerHTML = ''; return; }
+    el.innerHTML = recent.map(e =>
+      `<div class="wt-entry">
+        <span class="wt-entry-date">${fmtDate(e.dateKey)}</span>
+        <span class="wt-entry-val">${e.weight.toFixed(1)} kg</span>
+        <button class="wt-entry-del" data-k="${e.dateKey}">&times;</button>
+      </div>`
+    ).join('');
+    el.querySelectorAll('.wt-entry-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        saveWeights(loadWeights().filter(e => e.dateKey !== btn.dataset.k));
+        renderWeight();
+      });
+    });
+  }
+
+  document.getElementById('wtSave').addEventListener('click', () => {
+    const v = parseFloat(document.getElementById('wtInput').value);
+    if (!v || v < 20 || v > 350) return;
+    const arr = loadWeights();
+    const key = todayKey();
+    const idx = arr.findIndex(e => e.dateKey === key);
+    if (idx !== -1) arr[idx].weight = v;
+    else arr.push({ dateKey: key, weight: v });
+    arr.sort((a,b) => a.dateKey.localeCompare(b.dateKey));
+    saveWeights(arr);
+    renderWeight();
+    document.getElementById('wtInput').value = '';
+  });
+  document.getElementById('wtInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('wtSave').click();
+  });
+
+  /* ===== WATER ===== */
+  function defaultWater() {
+    return { unit:'bottle', bottleMl:500, glassMl:250,
+      profile:{ weightKg:75, age:20, sex:'m', activityHrsPerWeek:4 },
+      caffeineMgPerDay:150, logs:{} };
+  }
+  function loadWater() {
+    try { return Object.assign(defaultWater(), JSON.parse(localStorage.getItem(WATER_KEY)) || {}); }
+    catch(e) { return defaultWater(); }
+  }
+  function saveWater(s) { try { localStorage.setItem(WATER_KEY, JSON.stringify(s)); } catch(e) {} }
+
+  function calcWaterGoal(s) {
+    const p = s.profile || {};
+    const wKg = p.weightKg || 75;
+    const base = wKg * 35;
+    const ex = ((p.activityHrsPerWeek||4) / 7) * 500;
+    const caff = Math.max(0, (s.caffeineMgPerDay||150) - 200) * 1.5;
+    const totalMl = base + ex + caff + (p.sex==='m' ? 200 : 0);
+    const unitVol = s.unit==='glass' ? (s.glassMl||250) : (s.bottleMl||500);
+    return Math.max(1, Math.ceil(totalMl / unitVol));
+  }
+
+  function renderWater() {
+    const s = loadWater();
+    const done = (s.logs || {})[todayKey()] || 0;
+    const goal = calcWaterGoal(s);
+    const unitVol = s.unit==='glass' ? (s.glassMl||250) : (s.bottleMl||500);
+    const pct = Math.min(100, Math.round(done / goal * 100));
+    document.getElementById('waterCount').textContent = done;
+    document.getElementById('waterGoalNum').textContent = goal;
+    document.getElementById('waterFill').style.width = pct + '%';
+    document.getElementById('waterLbl').textContent = (done * unitVol) + ' ml gedronken';
+    document.getElementById('waterLblGoal').textContent = 'Doel: ' + (goal * unitVol) + ' ml';
+  }
+
+  document.getElementById('waterAddBtn').addEventListener('click', () => {
+    const s = loadWater();
+    s.logs = s.logs || {};
+    const k = todayKey();
+    s.logs[k] = (s.logs[k] || 0) + 1;
+    saveWater(s); renderWater();
+    const btn = document.getElementById('waterAddBtn');
+    btn.style.background = 'rgba(125,211,252,0.45)';
+    setTimeout(() => { btn.style.background = ''; }, 180);
+  });
+
+  document.getElementById('waterRemoveBtn').addEventListener('click', () => {
+    const s = loadWater();
+    s.logs = s.logs || {};
+    const k = todayKey();
+    s.logs[k] = Math.max(0, (s.logs[k] || 0) - 1);
+    saveWater(s); renderWater();
+  });
+
+  /* ===== PHOTOS ===== */
+  function loadPhotos() {
+    try { const a = JSON.parse(localStorage.getItem(PHOTO_KEY)); return Array.isArray(a) ? a : []; }
+    catch(e) { return []; }
+  }
+  function savePhotos(arr) { try { localStorage.setItem(PHOTO_KEY, JSON.stringify(arr)); } catch(e) {} }
+
+  function renderPhotos() {
+    const photos = loadPhotos().slice().reverse();
+    const grid = document.getElementById('photoGrid');
+    if (!photos.length) {
+      grid.innerHTML = '<div class="photo-empty">Nog geen foto\'s. Voeg je eerste progress foto toe!</div>';
+      return;
+    }
+    grid.innerHTML = photos.map(p =>
+      `<div class="photo-card" data-id="${p.id}">
+        <img src="${p.dataUrl}" alt="Progress foto" loading="lazy">
+        <div class="photo-overlay"></div>
+        <div class="photo-meta">
+          <div class="photo-date">${fmtDate(p.dateKey)}</div>
+          ${p.weight ? `<div class="photo-wt">${p.weight} kg</div>` : ''}
+        </div>
+        <button class="photo-del" data-id="${p.id}">&times;</button>
+      </div>`
+    ).join('');
+
+    grid.querySelectorAll('.photo-card').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.classList.contains('photo-del')) return;
+        const p = loadPhotos().find(x => x.id === card.dataset.id);
+        if (!p) return;
+        document.getElementById('viewerImg').src = p.dataUrl;
+        document.getElementById('viewerDate').textContent = fmtDate(p.dateKey).toUpperCase();
+        document.getElementById('viewerWt').textContent = p.weight ? p.weight + ' kg' : '';
+        document.getElementById('viewerBg').classList.add('open');
+      });
+    });
+
+    grid.querySelectorAll('.photo-del').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        savePhotos(loadPhotos().filter(p => p.id !== btn.dataset.id));
+        renderPhotos();
+      });
+    });
+  }
+
+  document.getElementById('addPhotoBtn').addEventListener('click', () => {
+    document.getElementById('photoInput').click();
+  });
+
+  document.getElementById('photoInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const weights = loadWeights();
+      const lastWt = weights[weights.length-1];
+      const photos = loadPhotos();
+      photos.unshift({ id: uid(), dataUrl: ev.target.result, dateKey: todayKey(), weight: lastWt ? lastWt.weight : null });
+      if (photos.length > 100) photos.splice(100);
+      savePhotos(photos); renderPhotos();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('viewerClose').addEventListener('click', () => {
+    document.getElementById('viewerBg').classList.remove('open');
+  });
+  document.getElementById('viewerBg').addEventListener('click', e => {
+    if (e.target === document.getElementById('viewerBg')) document.getElementById('viewerBg').classList.remove('open');
+  });
+
+  /* ===== INIT ===== */
+  renderWeight();
+  renderWater();
+  renderPhotos();
+  window.addEventListener('storage', () => { renderWeight(); renderWater(); renderPhotos(); });
+
+  /* Expose for Nova actions */
+  window._body = {
+    addWater: () => { document.getElementById('waterAddBtn').click(); },
+    logWeight: (kg) => {
+      document.getElementById('wtInput').value = kg;
+      document.getElementById('wtSave').click();
+    }
+  };
+})();
+</script>
+</body>
+</html>

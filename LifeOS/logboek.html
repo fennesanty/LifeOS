@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="lock.js"></script>
+<script src="/api/config"></script>
+<link rel="stylesheet" href="theme.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1410">
+<title>Logboek · Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<style>
+:root {
+  --bg: #0A1410;
+  --text-primary: #EAEFEA;
+  --text-secondary: #9fb3a9;
+  --text-tertiary: #6E827A;
+  --accent: #6BE3A4;
+  --accent2: #818CF8;
+  --warn: #F2C063;
+  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+  --font-head: 'Space Grotesk', var(--font);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text-secondary); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+body {
+  min-height: 100vh; position: relative; overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 18px 90px;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 75% 10%, rgba(129,140,248,0.15), transparent 45%),
+    radial-gradient(circle at 25% 90%, rgba(124,239,185,0.07), transparent 50%);
+  filter: blur(40px); pointer-events: none; z-index: -2;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(129,140,248,0.02) 1px, transparent 1px);
+  background-size: 3px 3px; pointer-events: none; z-index: -1;
+}
+
+.page { max-width: 720px; margin: 0 auto; }
+.page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.back-btn {
+  border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04);
+  color: var(--text-primary); border-radius: 10px; padding: 8px 13px;
+  font-size: 16px; opacity: 0.6; transition: opacity 0.15s; text-decoration: none;
+  display: inline-flex; align-items: center;
+}
+.back-btn:hover { opacity: 1; }
+.page-title {
+  margin: 0; font-family: var(--font-head); font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+  background: linear-gradient(180deg,#FFFFFF 0%,#C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.nova-link {
+  margin-left: auto; border: 1px solid rgba(129,140,248,0.30); background: rgba(129,140,248,0.12);
+  color: var(--accent2); border-radius: 10px; padding: 7px 13px; text-decoration: none;
+  font-size: 12.5px; font-weight: 700; transition: background 0.15s; white-space: nowrap;
+}
+.nova-link:hover { background: rgba(129,140,248,0.22); }
+
+.section-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-tertiary); margin: 0 0 10px;
+}
+.glass {
+  background: linear-gradient(165deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 45%, rgba(0,0,0,0.06) 100%);
+  border: 1px solid rgba(255,255,255,0.12); border-top-color: rgba(255,255,255,0.30);
+  backdrop-filter: blur(22px) saturate(1.35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 16px 44px rgba(0,0,0,0.45);
+  border-radius: 20px; padding: 20px; margin-bottom: 18px;
+}
+
+.entry-title-input {
+  width: 100%; padding: 10px 13px; border: 1px solid rgba(255,255,255,0.08); border-radius: 11px;
+  background: rgba(0,0,0,0.22); color: var(--text-primary); font-family: var(--font-head);
+  font-size: 16px; font-weight: 600; outline: none; margin-bottom: 10px; transition: border-color 0.2s;
+}
+.entry-title-input:focus { border-color: rgba(129,140,248,0.45); }
+.entry-title-input::placeholder { color: var(--text-tertiary); font-weight: 400; }
+
+.entry-text {
+  width: 100%; min-height: 160px; padding: 13px; border: 1px solid rgba(255,255,255,0.08); border-radius: 11px;
+  background: rgba(0,0,0,0.22); color: var(--text-primary); font-family: var(--font); font-size: 14.5px;
+  line-height: 1.65; resize: vertical; outline: none; transition: border-color 0.2s;
+}
+.entry-text:focus { border-color: rgba(129,140,248,0.45); }
+.entry-text::placeholder { color: var(--text-tertiary); }
+
+.entry-actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.mood-group { display: flex; gap: 6px; }
+.mood-btn {
+  border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04);
+  border-radius: 9px; padding: 6px 12px; font-size: 13px; cursor: pointer;
+  transition: all 0.15s; color: var(--text-secondary); font-family: var(--font);
+}
+.mood-btn.active { border-color: rgba(129,140,248,0.5); background: rgba(129,140,248,0.15); color: var(--text-primary); }
+.mood-btn:hover { background: rgba(255,255,255,0.08); }
+.hint { font-size: 11px; color: var(--text-tertiary); }
+.save-btn {
+  margin-left: auto; border: 0; border-radius: 11px; padding: 9px 22px;
+  background: var(--accent2); color: white; font-family: var(--font);
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: filter 0.15s;
+}
+.save-btn:hover { filter: brightness(1.12); }
+
+.entries-list { display: flex; flex-direction: column; gap: 12px; }
+.entry-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; overflow: hidden; transition: border-color 0.15s;
+}
+.entry-card:hover { border-color: rgba(255,255,255,0.15); }
+.entry-card-head {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+  cursor: pointer; user-select: none;
+}
+.entry-card-left { flex: 1; min-width: 0; }
+.entry-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry-card-meta { display: flex; align-items: center; gap: 8px; }
+.entry-card-date { font-size: 11.5px; color: var(--text-tertiary); font-family: var(--font-mono); }
+.entry-mood-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.entry-card-chevron { color: var(--text-tertiary); font-size: 13px; transition: transform 0.2s; flex-shrink: 0; margin-top: 2px; }
+.entry-card.open .entry-card-chevron { transform: rotate(90deg); }
+.entry-card-body {
+  padding: 0 16px 14px; display: none;
+  font-size: 14px; line-height: 1.65; color: var(--text-secondary); white-space: pre-wrap;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.entry-card.open .entry-card-body { display: block; padding-top: 12px; }
+.entry-card-del {
+  border: 0; background: transparent; color: var(--text-tertiary); font-size: 14px;
+  cursor: pointer; padding: 2px 6px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0;
+}
+.entry-card:hover .entry-card-del { opacity: 1; }
+.entry-card-del:hover { color: #FF6B6B; }
+.entries-empty { text-align: center; padding: 40px 0; font-size: 13px; color: var(--text-tertiary); font-style: italic; }
+
+.mood-goed   { background: #6BE3A4; }
+.mood-ok     { background: #F2C063; }
+.mood-slecht { background: #FF8A8A; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-head">
+    <a class="back-btn" href="index.html">&#8592;</a>
+    <h1 class="page-title">Logboek</h1>
+    <a class="nova-link" href="nova-lite.html">Nova &#8594;</a>
+  </div>
+
+  <div class="section-label">NIEUWE ENTRY</div>
+  <div class="glass">
+    <input class="entry-title-input" id="entryTitle" type="text" placeholder="Titel (bijv. Idee YouTube collab, Business strategie...)">
+    <textarea class="entry-text" id="entryText" placeholder="Schrijf hier je gedachten, ideeën, brainstorm of dagelijkse reflectie...&#10;&#10;Tip: open daarna Nova (rechtsboven) om samen verder te brainstormen."></textarea>
+    <div class="entry-actions">
+      <div class="mood-group" id="moodGroup">
+        <button class="mood-btn active" data-mood="goed">Goede dag</button>
+        <button class="mood-btn" data-mood="ok">Normaal</button>
+        <button class="mood-btn" data-mood="slecht">Zwaar</button>
+      </div>
+      <span class="hint">Ctrl+Enter</span>
+      <button class="save-btn" id="saveBtn">Opslaan</button>
+    </div>
+  </div>
+
+  <div class="section-label">EERDERE ENTRIES</div>
+  <div class="entries-list" id="entriesList"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const LS_KEY = 'logboek_v1';
+  let activeMood = 'goed';
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function fmtDate(k) {
+    try { return new Date(k + 'T12:00:00').toLocaleDateString('nl-BE', { weekday:'short', day:'numeric', month:'long', year:'2-digit' }); }
+    catch(e) { return k; }
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function load() {
+    try { const a = JSON.parse(localStorage.getItem(LS_KEY)); return Array.isArray(a) ? a : []; }
+    catch(e) { return []; }
+  }
+  function persist(entries) { try { localStorage.setItem(LS_KEY, JSON.stringify(entries)); } catch(e) {} }
+
+  function render() {
+    const entries = load().slice().sort((a, b) => b.ts - a.ts);
+    const list = document.getElementById('entriesList');
+    if (!entries.length) {
+      list.innerHTML = '<div class="entries-empty">Nog geen entries. Schrijf je eerste gedachte hierboven!</div>';
+      return;
+    }
+    list.innerHTML = entries.map(e =>
+      `<div class="entry-card" data-id="${e.id}">
+        <div class="entry-card-head">
+          <div class="entry-card-left">
+            <div class="entry-card-title">${escHtml(e.title || '(zonder titel)')}</div>
+            <div class="entry-card-meta">
+              <span class="entry-mood-dot mood-${e.mood || 'ok'}"></span>
+              <span class="entry-card-date">${fmtDate(e.dateKey)}</span>
+            </div>
+          </div>
+          <button class="entry-card-del" data-id="${e.id}">&times;</button>
+          <span class="entry-card-chevron">&#8250;</span>
+        </div>
+        <div class="entry-card-body">${escHtml(e.text || '')}</div>
+      </div>`
+    ).join('');
+
+    list.querySelectorAll('.entry-card-head').forEach(head => {
+      head.addEventListener('click', e => {
+        if (e.target.classList.contains('entry-card-del')) return;
+        head.closest('.entry-card').classList.toggle('open');
+      });
+    });
+    list.querySelectorAll('.entry-card-del').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        persist(load().filter(x => x.id !== btn.dataset.id));
+        render();
+      });
+    });
+  }
+
+  document.getElementById('moodGroup').querySelectorAll('.mood-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeMood = btn.dataset.mood;
+    });
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    const title = document.getElementById('entryTitle').value.trim();
+    const text  = document.getElementById('entryText').value.trim();
+    if (!text && !title) return;
+    const entries = load();
+    entries.push({ id: uid(), dateKey: todayKey(), title, text, mood: activeMood, ts: Date.now() });
+    persist(entries);
+    document.getElementById('entryTitle').value = '';
+    document.getElementById('entryText').value = '';
+    render();
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') document.getElementById('saveBtn').click();
+  });
+
+  render();
+
+  window._logboek = {
+    addEntry: (title, text) => {
+      document.getElementById('entryTitle').value = title || '';
+      document.getElementById('entryText').value = text || '';
+      document.getElementById('saveBtn').click();
+    }
+  };
+})();
+</script>
+</body>
+</html>
