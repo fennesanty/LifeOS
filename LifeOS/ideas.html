@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="lock.js"></script>
+<script src="/api/config"></script>
+<link rel="stylesheet" href="theme.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1410">
+<title>Content Ideas · Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<style>
+:root {
+  --bg: #0A1410;
+  --text-primary: #EAEFEA;
+  --text-secondary: #9fb3a9;
+  --text-tertiary: #6E827A;
+  --accent: #6BE3A4;
+  --line: rgba(124,239,185,0.16);
+  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+  --font-head: 'Space Grotesk', var(--font);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text-secondary); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+body {
+  min-height: 100vh; position: relative; overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 18px 80px;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 82% 14%, rgba(124,239,185,0.14), transparent 45%),
+    radial-gradient(circle at 18% 90%, rgba(124,239,185,0.06), transparent 50%);
+  filter: blur(40px); pointer-events: none; z-index: -2;
+  animation: drift 36s ease-in-out infinite alternate;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(124,239,185,0.02) 1px, transparent 1px);
+  background-size: 3px 3px; pointer-events: none; z-index: -1;
+}
+@keyframes drift { 0%{transform:translate3d(0,0,0)} 100%{transform:translate3d(-22px,14px,0)} }
+
+.page { max-width: 760px; margin: 0 auto; }
+.page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.back-btn {
+  border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04);
+  color: var(--text-primary); border-radius: 10px; padding: 8px 13px;
+  font-size: 16px; opacity: 0.6; transition: opacity 0.15s;
+  text-decoration: none; display: inline-flex; align-items: center;
+}
+.back-btn:hover { opacity: 1; }
+.page-title {
+  margin: 0; font-family: var(--font-head); font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+  background: linear-gradient(180deg,#FFFFFF 0%,#C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.capture-box {
+  background: linear-gradient(165deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 45%, rgba(0,0,0,0.06) 100%);
+  border: 1px solid rgba(255,255,255,0.12); border-top-color: rgba(255,255,255,0.30);
+  backdrop-filter: blur(22px) saturate(1.35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 16px 44px rgba(0,0,0,0.45);
+  border-radius: 20px; padding: 18px; margin-bottom: 16px;
+}
+.idea-input {
+  width: 100%; background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-family: var(--font); font-size: 16px;
+  resize: none; min-height: 52px; line-height: 1.55;
+}
+.idea-input::placeholder { color: var(--text-tertiary); }
+.capture-meta { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.seg { display: flex; border: 1px solid rgba(255,255,255,0.10); border-radius: 10px; overflow: hidden; }
+.seg-btn { border: 0; background: transparent; color: var(--text-tertiary); font-family: var(--font); font-size: 12px; font-weight: 700; padding: 7px 12px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.seg-btn.on { background: rgba(255,255,255,0.10); color: var(--text-primary); }
+.save-idea-btn {
+  margin-left: auto; border: 0; border-radius: 10px; padding: 9px 18px;
+  background: var(--accent); color: #04140d; font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: filter 0.15s, transform 0.1s;
+}
+.save-idea-btn:hover { filter: brightness(1.08); }
+.save-idea-btn:active { transform: scale(0.96); }
+
+.filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.chip {
+  border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04);
+  color: var(--text-tertiary); border-radius: 999px; padding: 5px 12px;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.chip.on { background: rgba(107,227,164,0.14); color: var(--accent); border-color: rgba(107,227,164,0.28); }
+
+.sort-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.sort-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); }
+.sort-btn { border: 1px solid rgba(255,255,255,0.08); background: transparent; color: var(--text-tertiary); border-radius: 8px; padding: 5px 11px; font-family: var(--font); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: background 0.12s, color 0.12s; }
+.sort-btn.on { background: rgba(255,255,255,0.06); color: var(--text-primary); border-color: rgba(255,255,255,0.15); }
+
+.idea-list { display: flex; flex-direction: column; gap: 10px; }
+.idea-card {
+  background: linear-gradient(165deg, rgba(255,255,255,0.07) 0%, rgba(0,0,0,0.04) 100%);
+  border: 1px solid rgba(255,255,255,0.09); border-top-color: rgba(255,255,255,0.20);
+  border-radius: 16px; overflow: hidden; transition: box-shadow 0.15s;
+}
+.idea-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+.card-top { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; cursor: pointer; }
+.idea-text { flex: 1; font-size: 14.5px; color: var(--text-primary); line-height: 1.5; font-weight: 600; }
+.card-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.ib {
+  border: 0; background: transparent; color: var(--text-tertiary); font-size: 14px;
+  cursor: pointer; padding: 2px 4px; opacity: 0.5; transition: opacity 0.15s, color 0.15s; line-height: 1;
+}
+.ib:hover { opacity: 1; }
+.ib.copy:hover { color: var(--accent); }
+.ib.done:hover { color: #F2C063; }
+.ib.del:hover { color: #FF6B6B; }
+.card-foot { display: flex; align-items: center; gap: 8px; padding: 0 16px 12px; flex-wrap: wrap; }
+.tag-pill { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+.tag-BBC { background: rgba(251,146,60,0.18); color: #fb923c; border: 1px solid rgba(251,146,60,0.28); }
+.tag-Basketball { background: rgba(248,113,113,0.18); color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
+.tag-General { background: rgba(159,179,169,0.12); color: var(--text-secondary); border: 1px solid rgba(159,179,169,0.20); }
+.status-pill { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+.sp-Raw { background: rgba(255,255,255,0.06); color: var(--text-tertiary); border: 1px solid rgba(255,255,255,0.10); }
+.sp-Fleshing { background: rgba(107,227,164,0.10); color: var(--accent); border: 1px solid rgba(107,227,164,0.22); }
+.sp-Ready { background: rgba(107,227,164,0.20); color: #7CEFB9; border: 1px solid rgba(107,227,164,0.40); }
+.idea-ts { font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }
+
+.notes-panel { padding: 0 16px 14px; }
+.notes-area {
+  width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px;
+  color: var(--text-secondary); font-family: var(--font); font-size: 13.5px; padding: 10px 12px;
+  outline: none; resize: vertical; min-height: 68px; transition: border-color 0.2s;
+}
+.notes-area:focus { border-color: rgba(107,227,164,0.35); }
+.status-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.sc {
+  border: 1px solid rgba(255,255,255,0.10); background: transparent; color: var(--text-tertiary);
+  border-radius: 8px; padding: 5px 11px; font-family: var(--font); font-size: 11.5px; font-weight: 700;
+  cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.sc.on { background: rgba(107,227,164,0.14); color: var(--accent); border-color: rgba(107,227,164,0.28); }
+
+.arc-header { display: flex; align-items: center; gap: 10px; margin: 24px 0 12px; cursor: pointer; user-select: none; }
+.arc-title { font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: var(--text-tertiary); }
+.arc-count { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 999px; padding: 2px 8px; }
+.arc-toggle { font-size: 11px; color: var(--text-tertiary); margin-left: auto; }
+.arc-list { display: flex; flex-direction: column; gap: 8px; }
+.idea-card.arc { opacity: 0.45; }
+.idea-card.arc:hover { opacity: 0.7; }
+.empty-msg { text-align: center; padding: 40px 20px; font-size: 13px; color: var(--text-tertiary); font-style: italic; }
+.flash {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: rgba(107,227,164,0.92); color: #04140d; border-radius: 10px;
+  padding: 10px 20px; font-size: 13px; font-weight: 700;
+  pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 999;
+}
+.flash.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-head">
+    <a class="back-btn" href="index.html">←</a>
+    <h1 class="page-title">Content Ideas</h1>
+  </div>
+
+  <div class="capture-box">
+    <textarea class="idea-input" id="ideaInput" placeholder="Capture an idea... (Enter to save)" rows="2"></textarea>
+    <div class="capture-meta">
+      <div class="seg" id="tagSeg">
+        <button class="seg-btn on" data-v="BBC">BBC</button>
+        <button class="seg-btn" data-v="Basketball">Basketball</button>
+        <button class="seg-btn" data-v="General">General</button>
+      </div>
+      <button class="save-idea-btn" id="saveIdea">Save</button>
+    </div>
+  </div>
+
+  <div class="filters" id="filterRow">
+    <button class="chip on" data-type="tag" data-v="">All tags</button>
+    <button class="chip" data-type="tag" data-v="BBC">BBC</button>
+    <button class="chip" data-type="tag" data-v="Basketball">Basketball</button>
+    <button class="chip" data-type="tag" data-v="General">General</button>
+    <button class="chip on" data-type="status" data-v="">All status</button>
+    <button class="chip" data-type="status" data-v="Raw">Raw</button>
+    <button class="chip" data-type="status" data-v="Fleshing Out">Fleshing Out</button>
+    <button class="chip" data-type="status" data-v="Ready">Ready</button>
+  </div>
+
+  <div class="sort-row">
+    <span class="sort-label">Sort</span>
+    <button class="sort-btn on" data-sort="newest">Newest</button>
+    <button class="sort-btn" data-sort="tag">By tag</button>
+  </div>
+
+  <div class="idea-list" id="ideaList"></div>
+
+  <div class="arc-header" id="arcHeader">
+    <span class="arc-title">Used / Archive</span>
+    <span class="arc-count" id="arcCount">0</span>
+    <span class="arc-toggle" id="arcToggle">Show</span>
+  </div>
+  <div class="arc-list" id="arcList" style="display:none"></div>
+</div>
+<div class="flash" id="flash">Copied!</div>
+
+<script>
+(function () {
+  'use strict';
+  const LS = 'content_ideas_v1';
+  const STATUSES = ['Raw', 'Fleshing Out', 'Ready'];
+  const SP_CLASS = { 'Raw': 'sp-Raw', 'Fleshing Out': 'sp-Fleshing', 'Ready': 'sp-Ready' };
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(LS)) || []; }
+    catch (e) { return []; }
+  }
+  function persist() { localStorage.setItem(LS, JSON.stringify(ideas)); }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fmtTs(iso) {
+    try { return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    catch (e) { return ''; }
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+  let ideas = load();
+  let filterTag = '', filterStatus = '', sortMode = 'newest';
+  let selectedTag = 'BBC';
+  let expandedId = null;
+  let arcOpen = false;
+
+  function cardHtml(idea, archived) {
+    const expanded = expandedId === idea.id;
+    return `<div class="idea-card${archived?' arc':''}" data-id="${idea.id}">
+      <div class="card-top" data-exp="${idea.id}">
+        <div class="idea-text">${esc(idea.text)}</div>
+        <div class="card-btns">
+          <button class="ib copy" data-copy="${idea.id}" title="Copy idea">&#128203;</button>
+          ${!archived ? `<button class="ib done" data-use="${idea.id}" title="Mark used">&#10003;</button>` : ''}
+          <button class="ib del" data-del="${idea.id}" title="Delete">&#10005;</button>
+        </div>
+      </div>
+      <div class="card-foot">
+        <span class="tag-pill tag-${idea.tag}">${esc(idea.tag)}</span>
+        <span class="status-pill ${SP_CLASS[idea.status]||'sp-Raw'}">${esc(idea.status)}</span>
+        <span class="idea-ts">${fmtTs(idea.ts)}</span>
+      </div>
+      ${expanded ? `<div class="notes-panel">
+        <textarea class="notes-area" data-notes="${idea.id}" placeholder="Add notes...">${esc(idea.notes||'')}</textarea>
+        <div class="status-row">
+          ${STATUSES.map(s=>`<button class="sc${idea.status===s?' on':''}" data-setstatus="${idea.id}" data-v="${s}">${s}</button>`).join('')}
+        </div>
+      </div>` : ''}
+    </div>`;
+  }
+
+  function getActive() {
+    let list = ideas.filter(i => {
+      if (i.used) return false;
+      if (filterTag && i.tag !== filterTag) return false;
+      if (filterStatus && i.status !== filterStatus) return false;
+      return true;
+    });
+    if (sortMode === 'tag') list = [...list].sort((a,b) => a.tag.localeCompare(b.tag));
+    return list;
+  }
+
+  function render() {
+    const active = getActive();
+    const archived = ideas.filter(i => i.used);
+    const el = document.getElementById('ideaList');
+    const arcEl = document.getElementById('arcList');
+    document.getElementById('arcCount').textContent = archived.length;
+    document.getElementById('arcToggle').textContent = arcOpen ? 'Hide' : 'Show';
+    el.innerHTML = active.length ? active.map(i=>cardHtml(i,false)).join('') : '<div class="empty-msg">No ideas yet. Type one above.</div>';
+    arcEl.style.display = arcOpen ? 'flex' : 'none';
+    arcEl.style.flexDirection = 'column';
+    arcEl.style.gap = '8px';
+    arcEl.innerHTML = archived.length ? archived.map(i=>cardHtml(i,true)).join('') : '';
+    bindEvents();
+  }
+
+  function bindEvents() {
+    document.querySelectorAll('[data-exp]').forEach(el => {
+      el.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        const id = el.dataset.exp;
+        expandedId = expandedId === id ? null : id;
+        render();
+      });
+    });
+    document.querySelectorAll('[data-copy]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const idea = ideas.find(i => i.id === btn.dataset.copy);
+        if (!idea) return;
+        navigator.clipboard.writeText(idea.text).catch(()=>{});
+        const f = document.getElementById('flash');
+        f.classList.add('show');
+        setTimeout(() => f.classList.remove('show'), 1600);
+      });
+    });
+    document.querySelectorAll('[data-use]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const idea = ideas.find(i => i.id === btn.dataset.use);
+        if (idea) { idea.used = true; if (expandedId===idea.id) expandedId=null; persist(); render(); }
+      });
+    });
+    document.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (expandedId === btn.dataset.del) expandedId = null;
+        ideas = ideas.filter(i => i.id !== btn.dataset.del);
+        persist(); render();
+      });
+    });
+    document.querySelectorAll('[data-notes]').forEach(ta => {
+      ta.addEventListener('input', () => {
+        const idea = ideas.find(i => i.id === ta.dataset.notes);
+        if (idea) { idea.notes = ta.value; persist(); }
+      });
+      ta.addEventListener('click', e => e.stopPropagation());
+    });
+    document.querySelectorAll('[data-setstatus]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const idea = ideas.find(i => i.id === btn.dataset.setstatus);
+        if (idea) { idea.status = btn.dataset.v; persist(); render(); }
+      });
+    });
+  }
+
+  // tag selection
+  document.getElementById('tagSeg').addEventListener('click', e => {
+    const btn = e.target.closest('.seg-btn');
+    if (!btn) return;
+    document.querySelectorAll('#tagSeg .seg-btn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    selectedTag = btn.dataset.v;
+  });
+
+  function saveIdea() {
+    const text = document.getElementById('ideaInput').value.trim();
+    if (!text) return;
+    ideas.unshift({ id: uid(), text, tag: selectedTag, status: 'Raw', notes: '', ts: new Date().toISOString(), used: false });
+    persist(); render();
+    document.getElementById('ideaInput').value = '';
+  }
+  document.getElementById('saveIdea').addEventListener('click', saveIdea);
+  document.getElementById('ideaInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveIdea(); }
+  });
+
+  // filters
+  document.getElementById('filterRow').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    const type = chip.dataset.type, val = chip.dataset.v;
+    if (type === 'tag') {
+      filterTag = val;
+      document.querySelectorAll('.chip[data-type="tag"]').forEach(c => c.classList.toggle('on', c.dataset.v === val));
+    } else {
+      filterStatus = val;
+      document.querySelectorAll('.chip[data-type="status"]').forEach(c => c.classList.toggle('on', c.dataset.v === val));
+    }
+    render();
+  });
+
+  // sort
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sortMode = btn.dataset.sort;
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('on', b.dataset.sort === sortMode));
+      render();
+    });
+  });
+
+  // archive
+  document.getElementById('arcHeader').addEventListener('click', () => { arcOpen = !arcOpen; render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>

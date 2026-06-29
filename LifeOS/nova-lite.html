@@ -85,6 +85,42 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
 .composer input:focus { border-color: var(--accent); }
 .composer button { width: 50px; border: 0; border-radius: 12px; cursor: pointer; color: #04140d; background: var(--accent); font-size: 18px; }
 .composer button:active { transform: scale(.94); }
+
+/* ---- brain panel ---- */
+.brain-btn { margin-left: 6px; border: 1px solid var(--line); background: rgba(255,255,255,.03); border-radius: 10px; padding: 7px 10px; cursor: pointer; font-size: 15px; line-height: 1; opacity: .55; transition: opacity .15s; }
+.brain-btn:hover { opacity: 1; }
+.brain-btn.has-mem { opacity: 1; border-color: var(--accent); }
+.brain-overlay { position: fixed; inset: 0; z-index: 400; display: none; }
+.brain-overlay.open { display: block; }
+.brain-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(10px); }
+.brain-panel {
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(380px,100vw);
+  background: linear-gradient(165deg, rgba(14,30,22,.97), rgba(6,14,11,.99));
+  border-left: 1px solid rgba(255,255,255,.12);
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: -20px 0 60px rgba(0,0,0,.5);
+}
+.brain-head { padding: 20px 18px 14px; border-bottom: 1px solid rgba(255,255,255,.07); position: relative; }
+.brain-title { font-size: 16px; font-weight: 700; color: var(--fg); margin-bottom: 3px; }
+.brain-sub { font-size: 11.5px; color: var(--muted); }
+.brain-x { position: absolute; top: 16px; right: 14px; border: 0; background: transparent; color: var(--muted); font-size: 24px; cursor: pointer; line-height: 1; }
+.brain-x:hover { color: var(--fg); }
+.brain-add-area { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,.06); display: flex; flex-direction: column; gap: 8px; }
+.bc-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.bc { border: 1px solid rgba(255,255,255,.10); background: transparent; color: var(--muted); border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+.bc.on { background: rgba(124,239,185,.14); color: var(--accent); border-color: rgba(124,239,185,.30); }
+.bi-row { display: flex; gap: 8px; align-items: flex-end; }
+.bi { flex: 1; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.09); border-radius: 10px; color: var(--fg); font-size: 13.5px; padding: 9px 12px; outline: none; resize: none; min-height: 58px; font-family: inherit; transition: border-color .2s; }
+.bi:focus { border-color: rgba(124,239,185,.40); }
+.bi-save { border: 0; border-radius: 10px; padding: 0 14px; background: var(--accent); color: #04140d; font-size: 13px; font-weight: 700; cursor: pointer; height: 38px; flex-shrink: 0; }
+.brain-entries { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; }
+.be { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 11px 13px; display: flex; align-items: flex-start; gap: 10px; }
+.be-body { flex: 1; min-width: 0; }
+.be-cat { font-size: 9px; font-weight: 700; letter-spacing: .10em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.be-text { font-size: 13px; color: var(--fg); line-height: 1.5; }
+.be-del { border: 0; background: transparent; color: var(--muted); font-size: 15px; cursor: pointer; opacity: .45; transition: opacity .15s, color .15s; }
+.be-del:hover { opacity: 1; color: #FF6B6B; }
+.brain-empty { text-align: center; padding: 32px 0; font-size: 12.5px; color: var(--muted); font-style: italic; }
 </style>
 </head>
 <body>
@@ -92,6 +128,7 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
     <div class="top">
       <a class="back-btn" href="index.html" aria-label="Back to dashboard" title="Back to dashboard">←</a>
       <div class="title"><h1>Nova Lite</h1><div class="role">your mentor</div></div>
+      <button id="brainToggle" class="brain-btn" title="Nova's Brain">&#129504;</button>
       <button id="keyToggle" class="key-toggle" aria-label="API key settings" title="API key"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-9.6 9.6"/><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><circle cx="7.5" cy="15.5" r="5.5"/></svg></button>
     </div>
     <div class="orb-wrap"><div class="orb" id="orb"></div></div>
@@ -115,9 +152,35 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
     </div>
   </div>
 
+<!-- Brain panel -->
+<div class="brain-overlay" id="brainOverlay">
+  <div class="brain-backdrop" id="brainBackdrop"></div>
+  <div class="brain-panel">
+    <div class="brain-head">
+      <div class="brain-title">Nova's Brain</div>
+      <div class="brain-sub">Memories Nova carries into every conversation</div>
+      <button class="brain-x" id="brainClose">&times;</button>
+    </div>
+    <div class="brain-add-area">
+      <div class="bc-row" id="bcRow">
+        <button class="bc on" data-c="Goals">Goals</button>
+        <button class="bc" data-c="About Me">About Me</button>
+        <button class="bc" data-c="Context">Context</button>
+        <button class="bc" data-c="Wins">Wins</button>
+      </div>
+      <div class="bi-row">
+        <textarea class="bi" id="brainInput" placeholder="Add a memory for Nova..." rows="2"></textarea>
+        <button class="bi-save" id="brainSave">Add</button>
+      </div>
+    </div>
+    <div class="brain-entries" id="brainEntries"></div>
+  </div>
+</div>
+
 <script>
 (function(){
   const KEY_LS = 'nova_lite_api_key';
+  const BRAIN_LS = 'nova_brain_v1';
   const feed = document.getElementById('feed');
   const input = document.getElementById('chatInput');
   const orb = document.getElementById('orb');
@@ -172,9 +235,19 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
   function addCoach(html){ const e = document.createElement('div'); e.className = 'msg coach'; e.innerHTML = '<div class="bubble"><span class="tag">Nova</span><div>' + html + '</div></div>'; feed.appendChild(e); scroll(); return e; }
   function scroll(){ window.scrollTo(0, document.body.scrollHeight); }
 
+  function brainContext() {
+    try {
+      const mem = JSON.parse(localStorage.getItem(BRAIN_LS)) || [];
+      if (!mem.length) return '';
+      return '\n\nNova\'s long-term memory about this user:\n' +
+        mem.map(m => `[${m.category}] ${m.text}`).join('\n') + '\n';
+    } catch (e) { return ''; }
+  }
+
   const SYS =
     "You are Nova, a personal mentor living inside the user's life-tracking dashboard. " +
-    "You can see their saved data (food, water, gym, finance, sleep, goals, etc.). " +
+    "You have a long-term memory about the user (listed below). " +
+    "You can also see all their current dashboard data. " +
     "Give honest, specific, encouraging guidance. " +
     "Answer in short bullet points starting with '- ', few words each, plain language. " +
     "Wrap key words and numbers in **double asterisks**. " +
@@ -196,7 +269,7 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
         body: JSON.stringify({
           key,
           messages: [
-            { role: 'system', content: SYS + JSON.stringify(dashboardData()) },
+            { role: 'system', content: SYS + brainContext() + JSON.stringify(dashboardData()) },
             { role: 'user', content: text },
           ],
         }),
@@ -216,7 +289,67 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
   document.getElementById('send').addEventListener('click', () => ask(input.value));
   input.addEventListener('keydown', e => { if (e.key === 'Enter') ask(input.value); });
 
-  addCoach('Hey — I am <b>Nova</b>. Paste your key above, then ask me about food, training, sleep, or where to start. I keep it short and give you <b>one thing to act on</b>.');
+  addCoach('Hey — I am <b>Nova</b>. Paste your key above, then ask me about food, training, sleep, or where to start. I keep it short and give you <b>one thing to act on</b>. Tap &#129504; to manage my long-term memory about you.');
+
+  // ---- brain panel ----
+  const BRAIN_CATS = ['Goals', 'About Me', 'Context', 'Wins'];
+  const brainBtn = document.getElementById('brainToggle');
+  const brainOverlay = document.getElementById('brainOverlay');
+  const brainClose = document.getElementById('brainClose');
+  const brainBackdrop = document.getElementById('brainBackdrop');
+  let selCat = 'Goals';
+
+  function loadBrain() {
+    try { return JSON.parse(localStorage.getItem(BRAIN_LS)) || []; }
+    catch (e) { return []; }
+  }
+  function saveBrain(mem) { localStorage.setItem(BRAIN_LS, JSON.stringify(mem)); }
+
+  function escB(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function renderBrain() {
+    const mem = loadBrain();
+    brainBtn.classList.toggle('has-mem', mem.length > 0);
+    const el = document.getElementById('brainEntries');
+    if (!mem.length) { el.innerHTML = '<div class="brain-empty">No memories yet. Add things Nova should always know about you.</div>'; return; }
+    el.innerHTML = mem.map(m =>
+      `<div class="be">
+        <div class="be-body"><div class="be-cat">${escB(m.category)}</div><div class="be-text">${escB(m.text)}</div></div>
+        <button class="be-del" data-id="${m.id}">&times;</button>
+      </div>`
+    ).join('');
+    el.querySelectorAll('.be-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mem2 = loadBrain().filter(m => m.id !== btn.dataset.id);
+        saveBrain(mem2); renderBrain();
+      });
+    });
+  }
+
+  document.getElementById('bcRow').addEventListener('click', e => {
+    const btn = e.target.closest('.bc');
+    if (!btn) return;
+    selCat = btn.dataset.c;
+    document.querySelectorAll('.bc').forEach(b => b.classList.toggle('on', b.dataset.c === selCat));
+  });
+
+  document.getElementById('brainSave').addEventListener('click', () => {
+    const text = document.getElementById('brainInput').value.trim();
+    if (!text) return;
+    const mem = loadBrain();
+    mem.unshift({ id: Date.now().toString(36), category: selCat, text, ts: new Date().toISOString() });
+    saveBrain(mem); renderBrain();
+    document.getElementById('brainInput').value = '';
+  });
+  document.getElementById('brainInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('brainSave').click(); }
+  });
+
+  brainBtn.addEventListener('click', () => { brainOverlay.classList.add('open'); renderBrain(); });
+  brainClose.addEventListener('click', () => brainOverlay.classList.remove('open'));
+  brainBackdrop.addEventListener('click', () => brainOverlay.classList.remove('open'));
+
+  renderBrain();
 })();
 </script>
 

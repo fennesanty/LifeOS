@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="lock.js"></script>
+<script src="/api/config"></script>
+<link rel="stylesheet" href="theme.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1410">
+<title>Affiliate Pipeline · Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<style>
+:root {
+  --bg: #0A1410;
+  --text-primary: #EAEFEA;
+  --text-secondary: #9fb3a9;
+  --text-tertiary: #6E827A;
+  --accent: #6BE3A4;
+  --line: rgba(124,239,185,0.16);
+  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+  --font-head: 'Space Grotesk', var(--font);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text-secondary); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+body {
+  min-height: 100vh; position: relative; overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 18px 80px;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 82% 14%, rgba(124,239,185,0.14), transparent 45%),
+    radial-gradient(circle at 18% 90%, rgba(124,239,185,0.06), transparent 50%);
+  filter: blur(40px); pointer-events: none; z-index: -2;
+  animation: drift 36s ease-in-out infinite alternate;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(124,239,185,0.02) 1px, transparent 1px);
+  background-size: 3px 3px; pointer-events: none; z-index: -1;
+}
+@keyframes drift { 0%{transform:translate3d(0,0,0)} 100%{transform:translate3d(-22px,14px,0)} }
+
+.page { max-width: 1100px; margin: 0 auto; }
+.page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.back-btn {
+  border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04);
+  color: var(--text-primary); border-radius: 10px; padding: 8px 13px;
+  cursor: pointer; font-size: 16px; opacity: 0.6; transition: opacity 0.15s;
+  text-decoration: none; display: inline-flex; align-items: center;
+}
+.back-btn:hover { opacity: 1; }
+.page-title {
+  margin: 0; font-family: var(--font-head); font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+  background: linear-gradient(180deg, #FFFFFF 0%, #C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.add-btn {
+  margin-left: auto; border: 1px solid rgba(107,227,164,0.25);
+  background: rgba(107,227,164,0.10); color: var(--accent);
+  border-radius: 11px; padding: 9px 16px;
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s, transform 0.1s;
+}
+.add-btn:hover { background: rgba(107,227,164,0.18); }
+.add-btn:active { transform: scale(0.96); }
+
+.modal-bg {
+  position: fixed; inset: 0; z-index: 200; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(12px);
+}
+.modal-bg.open { display: flex; }
+.modal {
+  width: 100%; max-width: 440px;
+  background: linear-gradient(165deg, rgba(30,44,38,0.92), rgba(10,16,14,0.96));
+  border: 1px solid rgba(255,255,255,0.12); border-top-color: rgba(255,255,255,0.26);
+  backdrop-filter: blur(28px); border-radius: 20px; padding: 24px;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.modal-title { font-family: var(--font-head); font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.modal-close { border: 0; background: transparent; color: var(--text-tertiary); font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px; }
+.modal-close:hover { color: var(--text-primary); }
+.field { margin-bottom: 13px; }
+.field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 7px; }
+.fi {
+  width: 100%; padding: 11px 13px; border: 1px solid rgba(255,255,255,0.08); border-radius: 11px;
+  background: rgba(0,0,0,0.28); color: var(--text-primary); font-family: var(--font); font-size: 14px;
+  outline: none; transition: border-color 0.2s; -webkit-appearance: none;
+}
+.fi:focus { border-color: rgba(107,227,164,0.45); }
+.fi option { background: #0e1f18; }
+textarea.fi { resize: vertical; min-height: 72px; }
+.save-btn {
+  width: 100%; margin-top: 4px; padding: 13px; border: 0; border-radius: 12px;
+  background: linear-gradient(180deg,#FFFFFF,#E8E5DD); color: #0A0A0B;
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 6px 18px rgba(0,0,0,0.25);
+  transition: filter 0.15s, transform 0.1s;
+}
+.save-btn:hover { filter: brightness(1.06); }
+.save-btn:active { transform: translateY(1px); }
+
+.board { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; align-items: start; }
+.col {
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.08); border-top-color: rgba(255,255,255,0.16);
+  padding: 16px 14px; min-height: 300px; transition: background 0.15s, border-color 0.15s;
+}
+.col.drag-over { background: rgba(107,227,164,0.06); border-color: rgba(107,227,164,0.30); }
+.col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.col-title { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.col-badge {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  color: var(--accent); background: rgba(107,227,164,0.12);
+  border: 1px solid rgba(107,227,164,0.22); border-radius: 999px; padding: 2px 8px;
+}
+.cards { display: flex; flex-direction: column; gap: 10px; min-height: 40px; }
+.card {
+  position: relative;
+  background: linear-gradient(165deg, rgba(255,255,255,0.07) 0%, rgba(0,0,0,0.04) 100%);
+  border: 1px solid rgba(255,255,255,0.09); border-top-color: rgba(255,255,255,0.20);
+  border-radius: 14px; padding: 13px 14px;
+  cursor: grab; transition: transform 0.15s, box-shadow 0.15s; user-select: none;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+.card.dragging { opacity: 0.35; cursor: grabbing; }
+.card-top { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.card-name { flex: 1; font-size: 14px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+.card-del {
+  border: 0; background: transparent; color: var(--text-tertiary); font-size: 15px;
+  cursor: pointer; padding: 0; line-height: 1; opacity: 0.5; transition: opacity 0.15s, color 0.15s;
+}
+.card-del:hover { opacity: 1; color: #FF6B6B; }
+.card-platform {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; margin-bottom: 8px;
+}
+.card-platform.ig { background: rgba(168,85,247,0.18); color: #c084fc; border: 1px solid rgba(168,85,247,0.28); }
+.card-platform.tt { background: rgba(234,239,234,0.10); color: #EAEFEA; border: 1px solid rgba(234,239,234,0.18); }
+.card-platform.yt { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+.card-meta { font-size: 11.5px; color: var(--text-tertiary); margin-bottom: 4px; }
+.card-notes { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: 8px; }
+.card-move { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.move-btn {
+  border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.03);
+  color: var(--text-tertiary); border-radius: 8px; padding: 4px 9px;
+  font-family: var(--font); font-size: 10.5px; font-weight: 600;
+  cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.move-btn:hover { background: rgba(107,227,164,0.10); color: var(--accent); border-color: rgba(107,227,164,0.25); }
+.empty { font-size: 12px; color: var(--text-tertiary); text-align: center; padding: 24px 0; font-style: italic; }
+
+@media (max-width: 700px) {
+  .board { grid-template-columns: 1fr; }
+  .col { min-height: unset; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-head">
+    <a class="back-btn" href="index.html">←</a>
+    <h1 class="page-title">Affiliate Pipeline</h1>
+    <button class="add-btn" id="openAdd">+ Add Creator</button>
+  </div>
+  <div class="board">
+    <div class="col" id="col-outreach" data-col="outreach">
+      <div class="col-head"><span class="col-title">Outreach</span><span class="col-badge" id="badge-outreach">0</span></div>
+      <div class="cards" id="cards-outreach"></div>
+    </div>
+    <div class="col" id="col-inGesprek" data-col="inGesprek">
+      <div class="col-head"><span class="col-title">In gesprek</span><span class="col-badge" id="badge-inGesprek">0</span></div>
+      <div class="cards" id="cards-inGesprek"></div>
+    </div>
+    <div class="col" id="col-live" data-col="live">
+      <div class="col-head"><span class="col-title">Live</span><span class="col-badge" id="badge-live">0</span></div>
+      <div class="cards" id="cards-live"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">New Creator</span>
+      <button class="modal-close" id="closeModal">×</button>
+    </div>
+    <div class="field"><label>Name</label><input class="fi" id="fName" placeholder="Creator name" autocomplete="off"></div>
+    <div class="field"><label>Platform</label>
+      <select class="fi" id="fPlatform">
+        <option value="Instagram">Instagram</option>
+        <option value="TikTok">TikTok</option>
+        <option value="YouTube">YouTube</option>
+      </select>
+    </div>
+    <div class="field"><label>Followers</label><input class="fi" id="fFollowers" placeholder="e.g. 45K" autocomplete="off"></div>
+    <div class="field"><label>Column</label>
+      <select class="fi" id="fColumn">
+        <option value="outreach">Outreach</option>
+        <option value="inGesprek">In gesprek</option>
+        <option value="live">Live</option>
+      </select>
+    </div>
+    <div class="field"><label>Notes</label><textarea class="fi" id="fNotes" placeholder="Any context..."></textarea></div>
+    <button class="save-btn" id="doAdd">Add to Pipeline</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const LS = 'affiliate_pipeline_v1';
+  const COLS = ['outreach', 'inGesprek', 'live'];
+  const LABELS = { outreach: 'Outreach', inGesprek: 'In gesprek', live: 'Live' };
+  const PC = { Instagram: 'ig', TikTok: 'tt', YouTube: 'yt' };
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(LS)) || { outreach: [], inGesprek: [], live: [] }; }
+    catch (e) { return { outreach: [], inGesprek: [], live: [] }; }
+  }
+  function save() { localStorage.setItem(LS, JSON.stringify(data)); }
+
+  let data = load();
+  let dragId = null;
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function fmt(iso) {
+    try { return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); }
+    catch (e) { return ''; }
+  }
+
+  function render() {
+    COLS.forEach(col => {
+      const box = document.getElementById('cards-' + col);
+      const badge = document.getElementById('badge-' + col);
+      const items = data[col] || [];
+      badge.textContent = items.length;
+      if (!items.length) { box.innerHTML = '<div class="empty">Drop cards here</div>'; return; }
+      box.innerHTML = items.map(c => {
+        const pc = PC[c.platform] || 'ig';
+        const moveBtns = COLS.filter(x => x !== col)
+          .map(o => `<button class="move-btn" data-id="${c.id}" data-to="${o}">&rarr; ${LABELS[o]}</button>`)
+          .join('');
+        return `<div class="card" draggable="true" data-id="${c.id}" data-col="${col}">
+          <div class="card-top">
+            <span class="card-name">${esc(c.name)}</span>
+            <button class="card-del" data-id="${c.id}" data-col="${col}" title="Delete">&times;</button>
+          </div>
+          <span class="card-platform ${pc}">${esc(c.platform)}</span>
+          <div class="card-meta">${esc(c.followers)} &middot; ${fmt(c.added)}</div>
+          ${c.notes ? `<div class="card-notes">${esc(c.notes)}</div>` : ''}
+          <div class="card-move">${moveBtns}</div>
+        </div>`;
+      }).join('');
+    });
+    bindEvents();
+  }
+
+  function bindEvents() {
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('dragstart', e => {
+        dragId = card.dataset.id;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => card.classList.add('dragging'), 0);
+      });
+      card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    });
+    document.querySelectorAll('.card-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const { id, col } = btn.dataset;
+        data[col] = (data[col] || []).filter(c => c.id !== id);
+        save(); render();
+      });
+    });
+    document.querySelectorAll('.move-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const { id, to } = btn.dataset;
+        let moved;
+        COLS.forEach(col => {
+          const idx = (data[col] || []).findIndex(c => c.id === id);
+          if (idx !== -1) { [moved] = data[col].splice(idx, 1); }
+        });
+        if (moved) { data[to] = data[to] || []; data[to].push(moved); save(); render(); }
+      });
+    });
+  }
+
+  COLS.forEach(col => {
+    const el = document.getElementById('col-' + col);
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); el.classList.remove('drag-over');
+      if (!dragId) return;
+      let moved;
+      COLS.forEach(c => {
+        const idx = (data[c] || []).findIndex(x => x.id === dragId);
+        if (idx !== -1) { [moved] = data[c].splice(idx, 1); }
+      });
+      if (moved) { data[col] = data[col] || []; data[col].push(moved); save(); render(); }
+      dragId = null;
+    });
+  });
+
+  const modalBg = document.getElementById('modalBg');
+  document.getElementById('openAdd').addEventListener('click', () => modalBg.classList.add('open'));
+  document.getElementById('closeModal').addEventListener('click', () => modalBg.classList.remove('open'));
+  modalBg.addEventListener('click', e => { if (e.target === modalBg) modalBg.classList.remove('open'); });
+
+  document.getElementById('doAdd').addEventListener('click', () => {
+    const name = document.getElementById('fName').value.trim();
+    if (!name) { document.getElementById('fName').focus(); return; }
+    const col = document.getElementById('fColumn').value;
+    data[col] = data[col] || [];
+    data[col].push({
+      id: uid(), name,
+      platform: document.getElementById('fPlatform').value,
+      followers: document.getElementById('fFollowers').value.trim() || '?',
+      notes: document.getElementById('fNotes').value.trim(),
+      added: new Date().toISOString(),
+    });
+    save(); render();
+    document.getElementById('fName').value = '';
+    document.getElementById('fFollowers').value = '';
+    document.getElementById('fNotes').value = '';
+    modalBg.classList.remove('open');
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

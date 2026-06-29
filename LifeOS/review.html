@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="lock.js"></script>
+<script src="/api/config"></script>
+<link rel="stylesheet" href="theme.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1410">
+<title>Weekly Review · Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<style>
+:root {
+  --bg: #0A1410;
+  --text-primary: #EAEFEA;
+  --text-secondary: #9fb3a9;
+  --text-tertiary: #6E827A;
+  --accent: #6BE3A4;
+  --line: rgba(124,239,185,0.16);
+  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+  --font-head: 'Space Grotesk', var(--font);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text-secondary); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+body {
+  min-height: 100vh; position: relative; overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 18px 80px;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 82% 14%, rgba(124,239,185,0.14), transparent 45%),
+    radial-gradient(circle at 18% 90%, rgba(124,239,185,0.06), transparent 50%);
+  filter: blur(40px); pointer-events: none; z-index: -2;
+  animation: drift 36s ease-in-out infinite alternate;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(124,239,185,0.02) 1px, transparent 1px);
+  background-size: 3px 3px; pointer-events: none; z-index: -1;
+}
+@keyframes drift { 0%{transform:translate3d(0,0,0)} 100%{transform:translate3d(-22px,14px,0)} }
+
+.page { max-width: 680px; margin: 0 auto; }
+.page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+.back-btn {
+  border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04);
+  color: var(--text-primary); border-radius: 10px; padding: 8px 13px;
+  font-size: 16px; opacity: 0.6; transition: opacity 0.15s;
+  text-decoration: none; display: inline-flex; align-items: center;
+}
+.back-btn:hover { opacity: 1; }
+.page-title {
+  margin: 0; font-family: var(--font-head); font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+  background: linear-gradient(180deg,#FFFFFF 0%,#C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.open-btn {
+  margin-left: auto; border: 1px solid rgba(107,227,164,0.25); background: rgba(107,227,164,0.10);
+  color: var(--accent); border-radius: 11px; padding: 9px 16px;
+  font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.open-btn:hover { background: rgba(107,227,164,0.18); }
+.open-btn:active { transform: scale(0.96); }
+
+.this-week {
+  background: linear-gradient(165deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 45%, rgba(0,0,0,0.06) 100%);
+  border: 1px solid rgba(255,255,255,0.12); border-top-color: rgba(255,255,255,0.30);
+  backdrop-filter: blur(22px) saturate(1.35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 16px 44px rgba(0,0,0,0.45);
+  border-radius: 20px; padding: 22px; margin-bottom: 22px;
+}
+.week-status { display: flex; align-items: center; gap: 14px; }
+.status-icon { font-size: 26px; flex-shrink: 0; }
+.status-body { flex: 1; min-width: 0; }
+.status-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.status-sub { font-size: 13px; color: var(--text-tertiary); }
+.view-btn {
+  border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06);
+  color: var(--text-primary); border-radius: 10px; padding: 9px 14px;
+  font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer;
+  flex-shrink: 0; transition: background 0.15s;
+}
+.view-btn:hover { background: rgba(255,255,255,0.10); }
+
+.section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 12px; }
+.review-list { display: flex; flex-direction: column; gap: 10px; }
+.review-item {
+  background: linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.03) 100%);
+  border: 1px solid rgba(255,255,255,0.09); border-top-color: rgba(255,255,255,0.18);
+  border-radius: 16px; overflow: hidden; cursor: pointer; transition: box-shadow 0.15s;
+}
+.review-item:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+.review-top { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.r-check { color: var(--accent); }
+.r-week { flex: 1; font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.r-ts { font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }
+.r-body { display: none; padding: 0 16px 16px; border-top: 1px solid rgba(255,255,255,0.06); }
+.r-body.open { display: block; }
+.qa { margin-top: 12px; }
+.qa-q { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 5px; }
+.qa-a { font-size: 14px; color: var(--text-primary); line-height: 1.55; }
+.empty-msg { text-align: center; padding: 40px 20px; font-size: 13px; color: var(--text-tertiary); font-style: italic; }
+
+/* ==== MODAL ==== */
+.rev-modal {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(6,12,10,0.92); backdrop-filter: blur(18px);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.rev-modal.open { display: flex; }
+.rev-panel {
+  width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto;
+  background: linear-gradient(165deg, rgba(20,38,30,0.95), rgba(8,16,13,0.98));
+  border: 1px solid rgba(255,255,255,0.14); border-top-color: rgba(255,255,255,0.30);
+  backdrop-filter: blur(30px); border-radius: 24px; padding: 32px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+}
+.modal-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.modal-x { border: 0; background: transparent; color: var(--text-tertiary); font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px; }
+.modal-x:hover { color: var(--text-primary); }
+.dots { display: flex; gap: 6px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 0.25s; }
+.dot.active { background: var(--accent); }
+.dot.done { background: rgba(107,227,164,0.45); }
+
+.step-q { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 20px; line-height: 1.3; }
+.step-ta {
+  width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.10); border-radius: 14px;
+  color: var(--text-primary); font-family: var(--font); font-size: 15px;
+  padding: 14px 16px; outline: none; resize: vertical; min-height: 120px; line-height: 1.6;
+  transition: border-color 0.2s;
+}
+.step-ta:focus { border-color: rgba(107,227,164,0.40); }
+.school-opts { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.school-opt {
+  flex: 1; min-width: 90px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);
+  color: var(--text-primary); border-radius: 13px; padding: 16px; text-align: center;
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.school-opt:hover { background: rgba(255,255,255,0.08); }
+.school-opt.sel { background: rgba(107,227,164,0.14); border-color: rgba(107,227,164,0.40); color: var(--accent); }
+.opt-note {
+  width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); border-radius: 11px;
+  color: var(--text-secondary); font-family: var(--font); font-size: 14px;
+  padding: 11px 13px; outline: none; resize: none; transition: border-color 0.2s;
+}
+.opt-note:focus { border-color: rgba(107,227,164,0.35); }
+.modal-nav { display: flex; gap: 10px; margin-top: 24px; }
+.nbtn {
+  border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06);
+  color: var(--text-primary); border-radius: 13px; padding: 13px 24px;
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.nbtn:hover { background: rgba(255,255,255,0.10); }
+.nbtn.primary { background: var(--accent); color: #04140d; border-color: transparent; margin-left: auto; }
+.nbtn.primary:hover { filter: brightness(1.08); }
+.nbtn:active { transform: scale(0.97); }
+
+.sum-title { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.sum-sub { font-size: 13px; color: var(--text-tertiary); margin-bottom: 22px; }
+.sum-qa { display: flex; flex-direction: column; gap: 14px; }
+.sum-q { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; }
+.sum-a { font-size: 14px; color: var(--text-primary); line-height: 1.6; }
+.done-btn {
+  width: 100%; margin-top: 24px; padding: 14px; border: 0; border-radius: 13px;
+  background: linear-gradient(180deg,#FFFFFF,#E8E5DD); color: #0A0A0B;
+  font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 8px 22px rgba(0,0,0,0.3);
+  transition: filter 0.15s, transform 0.1s;
+}
+.done-btn:hover { filter: brightness(1.05); }
+.done-btn:active { transform: translateY(1px); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-head">
+    <a class="back-btn" href="index.html">←</a>
+    <h1 class="page-title">Weekly Review</h1>
+    <button class="open-btn" id="openReview">Start Review</button>
+  </div>
+  <div class="this-week" id="thisWeek"></div>
+  <div class="section-label">Vorige Reviews</div>
+  <div class="review-list" id="reviewList"></div>
+</div>
+
+<div class="rev-modal" id="revModal">
+  <div class="rev-panel">
+    <div class="modal-top-row">
+      <div class="dots" id="dots"></div>
+      <button class="modal-x" id="closeRev">&times;</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const LS = 'weekly_review_v1';
+  const QS = [
+    'Wat ging goed deze week?',
+    'Wat ging niet goed?',
+    'BBC: wat was je grootste actie deze week?',
+    'School: ben je op schema?',
+    'Eén concrete aanpassing voor volgende week.',
+  ];
+  const SCHOOL = ['Ja', 'Gedeeltelijk', 'Nee'];
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(LS)) || { reviews: [] }; }
+    catch (e) { return { reviews: [] }; }
+  }
+  function persist() { localStorage.setItem(LS, JSON.stringify(data)); }
+
+  function esc(s) {
+    return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fmtDate(iso) {
+    try { return new Date(iso).toLocaleDateString('nl-BE', { weekday:'long', day:'numeric', month:'long' }); }
+    catch (e) { return ''; }
+  }
+
+  let data = load();
+  let step = 0, answers = ['','','','',''], schoolChoice = '', schoolNote = '', viewOnly = false;
+  let expandedKey = null;
+
+  function weekKey(d) {
+    const dt = d ? new Date(d) : new Date();
+    const jan1 = new Date(dt.getFullYear(), 0, 1);
+    const week = Math.ceil(((dt - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+    return dt.getFullYear() + '-W' + String(week).padStart(2,'0');
+  }
+  function isSunday() { return new Date().getDay() === 0; }
+  function currentReview() { const k = weekKey(); return data.reviews.find(r => r.weekKey === k); }
+
+  function weekLabel(key) {
+    const m = key.match(/(\d{4})-W(\d+)/);
+    if (!m) return key;
+    const d = new Date(Number(m[1]), 0, 1 + (Number(m[2])-1)*7);
+    while (d.getDay() !== 1) d.setDate(d.getDate()+1);
+    return 'Week van ' + d.toLocaleDateString('nl-BE', { day:'numeric', month:'long', year:'numeric' });
+  }
+
+  function renderBanner() {
+    const done = currentReview();
+    const el = document.getElementById('thisWeek');
+    if (done) {
+      el.innerHTML = `<div class="week-status">
+        <div class="status-icon">&#10003;</div>
+        <div class="status-body"><div class="status-title">Review klaar voor deze week</div><div class="status-sub">Ingevuld op ${fmtDate(done.ts)}</div></div>
+        <button class="view-btn" id="viewThis">Bekijk</button>
+      </div>`;
+      document.getElementById('viewThis').addEventListener('click', () => { openView(done); });
+    } else if (isSunday()) {
+      el.innerHTML = `<div class="week-status">
+        <div class="status-icon">&#128203;</div>
+        <div class="status-body"><div class="status-title">Het is zondag — tijd voor je weekly review!</div><div class="status-sub">Neem 5 minuten om de week te evalueren.</div></div>
+      </div>`;
+    } else {
+      el.innerHTML = `<div class="week-status">
+        <div class="status-icon">&#128197;</div>
+        <div class="status-body"><div class="status-title">Nog geen review deze week</div><div class="status-sub">Je kan er altijd een starten via de knop rechtsboven.</div></div>
+      </div>`;
+    }
+  }
+
+  function renderList() {
+    const el = document.getElementById('reviewList');
+    const sorted = [...data.reviews].sort((a,b) => new Date(b.ts)-new Date(a.ts));
+    if (!sorted.length) { el.innerHTML = '<div class="empty-msg">Nog geen reviews opgeslagen.</div>'; return; }
+    el.innerHTML = sorted.map(r => {
+      const exp = expandedKey === r.weekKey;
+      return `<div class="review-item" data-wk="${r.weekKey}">
+        <div class="review-top">
+          <span class="r-check">&#10003;</span>
+          <span class="r-week">${weekLabel(r.weekKey)}</span>
+          <span class="r-ts">${fmtDate(r.ts)}</span>
+        </div>
+        <div class="r-body${exp?' open':''}">
+          ${exp ? QS.map((q,i)=>`<div class="qa"><div class="qa-q">${esc(q)}</div><div class="qa-a">${esc(r.answers[i]||'—')}</div></div>`).join('') : ''}
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.review-item').forEach(item => {
+      item.addEventListener('click', () => {
+        expandedKey = expandedKey === item.dataset.wk ? null : item.dataset.wk;
+        renderList();
+      });
+    });
+  }
+
+  function openReviewModal() {
+    step = 0; answers = ['','','','','']; schoolChoice = ''; schoolNote = ''; viewOnly = false;
+    document.getElementById('revModal').classList.add('open');
+    renderStep();
+  }
+  function openView(review) {
+    answers = [...(review.answers||[])]; viewOnly = true;
+    document.getElementById('revModal').classList.add('open');
+    renderSummary();
+  }
+  function closeModal() { document.getElementById('revModal').classList.remove('open'); }
+
+  function renderDots() {
+    if (viewOnly) { document.getElementById('dots').innerHTML = ''; return; }
+    document.getElementById('dots').innerHTML = QS.map((_,i) =>
+      `<div class="dot${i===step?' active':i<step?' done':''}"></div>`
+    ).join('');
+  }
+
+  function renderStep() {
+    renderDots();
+    const body = document.getElementById('modalBody');
+    if (step === 3) {
+      body.innerHTML = `<div class="step-q">${esc(QS[3])}</div>
+        <div class="school-opts">
+          ${SCHOOL.map(o=>`<button class="school-opt${schoolChoice===o?' sel':''}" data-o="${o}">${o}</button>`).join('')}
+        </div>
+        <textarea class="opt-note" id="optNote" placeholder="Optionele toelichting..." rows="2">${esc(schoolNote)}</textarea>
+        <div class="modal-nav">
+          <button class="nbtn" id="nBack">Terug</button>
+          <button class="nbtn primary" id="nNext">Volgende</button>
+        </div>`;
+      body.querySelectorAll('.school-opt').forEach(btn => {
+        btn.addEventListener('click', () => { schoolChoice = btn.dataset.o; renderStep(); });
+      });
+      body.querySelector('#optNote').addEventListener('input', e => { schoolNote = e.target.value; });
+    } else {
+      body.innerHTML = `<div class="step-q">${esc(QS[step])}</div>
+        <textarea class="step-ta" id="stepTa" placeholder="Typ hier..." rows="5">${esc(answers[step]||'')}</textarea>
+        <div class="modal-nav">
+          ${step > 0 ? '<button class="nbtn" id="nBack">Terug</button>' : ''}
+          <button class="nbtn primary" id="nNext">${step===QS.length-1?'Afronden':'Volgende'}</button>
+        </div>`;
+      const ta = body.querySelector('#stepTa');
+      if (ta) { ta.focus(); ta.addEventListener('input', e => { answers[step] = e.target.value; }); }
+    }
+    const nNext = body.querySelector('#nNext');
+    const nBack = body.querySelector('#nBack');
+    if (nNext) nNext.addEventListener('click', () => {
+      if (step === 3) answers[3] = schoolChoice + (schoolNote ? ' — ' + schoolNote : '');
+      if (step < QS.length-1) { step++; renderStep(); }
+      else { saveAndShow(); }
+    });
+    if (nBack) nBack.addEventListener('click', () => { if (step > 0) { step--; renderStep(); } });
+  }
+
+  function renderSummary() {
+    renderDots();
+    const body = document.getElementById('modalBody');
+    body.innerHTML = `<div class="sum-title">${viewOnly?'Review overzicht':'Goed gedaan!'}</div>
+      <div class="sum-sub">${viewOnly?'':'Review opgeslagen voor deze week.'}</div>
+      <div class="sum-qa">
+        ${QS.map((q,i)=>`<div class="qa"><div class="sum-q">${esc(q)}</div><div class="sum-a">${esc(answers[i]||'—')}</div></div>`).join('')}
+      </div>
+      <button class="done-btn" id="doneBtn">Sluiten</button>`;
+    body.querySelector('#doneBtn').addEventListener('click', closeModal);
+  }
+
+  function saveAndShow() {
+    const k = weekKey();
+    data.reviews = data.reviews.filter(r => r.weekKey !== k);
+    data.reviews.push({ weekKey: k, answers: [...answers], ts: new Date().toISOString() });
+    persist(); viewOnly = false; renderBanner(); renderList(); renderSummary();
+  }
+
+  document.getElementById('openReview').addEventListener('click', openReviewModal);
+  document.getElementById('closeRev').addEventListener('click', closeModal);
+
+  if (isSunday() && !currentReview()) { setTimeout(openReviewModal, 500); }
+
+  renderBanner();
+  renderList();
+})();
+</script>
+</body>
+</html>
