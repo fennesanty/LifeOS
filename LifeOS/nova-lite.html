@@ -310,7 +310,6 @@ body { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, s
   async function ask(text){
     text = (text||'').trim(); if (!text || busy) return;
     const key = savedKey();
-    if (!key){ addCoach('- Paste your **NVIDIA API key** above first, then ask me again.'); return; }
     busy = true; addUser(text); input.value = '';
     setOrb('think');
     const loading = addCoach('<span class="dots"><i></i><i></i><i></i></span>');

@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method not allowed' });
 
   const body = req.body || {};
-  const key = body.key;
+  const key = process.env.NVIDIA_API_KEY || body.key;
   const messages = Array.isArray(body.messages) ? body.messages : [];
   if (!key) return res.status(400).json({ error: 'NVIDIA API key required' });
   if (!messages.length) return res.status(400).json({ error: 'messages required' });
