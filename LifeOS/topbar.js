@@ -306,6 +306,10 @@ body.topbar-modal-open {
     <span class="bottombar-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></span>
     <span>Nova</span>
   </a>
+  <a href="mental.html" class="bottombar-tab" data-page="mental">
+    <span class="bottombar-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5c0 3-2 5-5 7-3-2-5-4-5-7a5 5 0 0 1 5-5Z"/><path d="M12 22v-8"/></svg></span>
+    <span>Mental</span>
+  </a>
 </nav>
 `;
 
@@ -327,6 +331,7 @@ body.topbar-modal-open {
     const p = (window.location.pathname || '').toLowerCase();
     if (p.endsWith('body.html')) return 'body';
     if (p.endsWith('nova-lite.html')) return 'nova';
+    if (p.endsWith('mental.html')) return 'mental';
     return 'main'; // index.html, /, or anything else falls back to main
   }
   // The hub itself has nowhere to go "back" to within the app.
