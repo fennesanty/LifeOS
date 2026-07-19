@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Panel } from "../Panel";
-import { SectionLabel } from "../SectionLabel";
+import { CardHeader, DashPanel } from "../dashboard/DashCard";
 
 type Task = {
   id: string;
@@ -15,7 +14,7 @@ type Task = {
 
 export function SessionCard() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTitle, setNewTitle] = useState("");
+  const [focusText, setFocusText] = useState("");
   const [loading, setLoading] = useState(true);
 
   async function load() {
@@ -34,11 +33,11 @@ export function SessionCard() {
     load();
   }, []);
 
-  async function addTodayKeyTask(e: React.FormEvent) {
+  async function capture(e: React.FormEvent) {
     e.preventDefault();
-    if (!newTitle.trim()) return;
-    const title = newTitle.trim();
-    setNewTitle("");
+    if (!focusText.trim()) return;
+    const title = focusText.trim();
+    setFocusText("");
     await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -48,30 +47,40 @@ export function SessionCard() {
   }
 
   return (
-    <Panel>
-      <SectionLabel num="02" text="Session" />
-      <div className="title-serif text-xl mb-3" style={{ color: "var(--text-primary)" }}>
-        Good {new Date().getHours() < 12 ? "morning" : "afternoon"}, Fenne.
+    <DashPanel>
+      <CardHeader
+        num="02"
+        title="SESSION"
+        right={<span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>UTC±0</span>}
+      />
+      <div className="title-serif text-lg mb-1" style={{ color: "var(--text-primary)" }}>
+        Good {new Date().getHours() < 12 ? "morning" : "afternoon"}, <em>Fenne</em>.
       </div>
-      <form onSubmit={addTodayKeyTask} className="mb-3">
+      <div className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>
+        {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }).toUpperCase()}
+      </div>
+      <form onSubmit={capture} className="flex gap-2">
         <input
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          placeholder="Add a key task for today…"
-          className="w-full rounded-md px-3 py-2 text-sm bg-transparent border outline-none"
-          style={{ borderColor: "var(--line)", color: "var(--text-primary)" }}
+          value={focusText}
+          onChange={(e) => setFocusText(e.target.value)}
+          placeholder="Set today's one thing…"
+          className="flex-1 rounded-md px-3 py-2 text-xs bg-transparent outline-none"
+          style={{ border: "1px solid var(--line)", color: "var(--text-primary)" }}
         />
+        <button
+          type="submit"
+          className="rounded-md px-3 py-2 text-xs font-bold"
+          style={{ border: "1px solid var(--good)", color: "var(--good)" }}
+        >
+          Capture
+        </button>
       </form>
-      {loading ? (
-        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Loading…</p>
-      ) : tasks.length === 0 ? (
-        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>No key tasks for today yet.</p>
-      ) : (
-        <ul className="flex flex-col gap-2">
+      {!loading && tasks.length > 0 && (
+        <ul className="flex flex-col gap-2 mt-3">
           {tasks.map((t) => (
             <li
               key={t.id}
-              className="flex items-center justify-between text-sm rounded-md px-3 py-2"
+              className="flex items-center justify-between text-xs rounded-md px-3 py-2"
               style={{ border: "1px solid var(--line)", color: "var(--text-secondary)" }}
             >
               <span>{t.title}</span>
@@ -84,6 +93,6 @@ export function SessionCard() {
           ))}
         </ul>
       )}
-    </Panel>
+    </DashPanel>
   );
 }

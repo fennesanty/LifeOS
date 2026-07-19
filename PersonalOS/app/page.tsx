@@ -1,14 +1,13 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Shell } from "@/components/Shell";
-import { Panel } from "@/components/Panel";
-import { SectionLabel } from "@/components/SectionLabel";
-import { BlueprintPreview } from "@/components/BlueprintPreview";
 import { OperatorCard } from "@/components/cards/OperatorCard";
 import { SessionCard } from "@/components/cards/SessionCard";
 import { HabitTracker } from "@/components/cards/HabitTracker";
-import { GoalsCard } from "@/components/cards/GoalsCard";
-import { CrmCard } from "@/components/cards/CrmCard";
+import { CalendarCard } from "@/components/cards/CalendarCard";
+import { KeyBlockersCard } from "@/components/cards/KeyBlockersCard";
+import { FinancePulseCard } from "@/components/cards/FinancePulseCard";
+import { NutritionCard } from "@/components/cards/NutritionCard";
 import { AUTH_COOKIE, verifySessionToken } from "@/lib/auth";
 
 export default async function Home() {
@@ -20,30 +19,19 @@ export default async function Home() {
 
   return (
     <Shell>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] gap-4">
-        <BlueprintPreview />
-        <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] gap-3">
+        <div className="flex flex-col gap-3">
           <OperatorCard />
-          <Panel>
-            <SectionLabel num="04" text="Finance Pulse" />
-            <p style={{ color: "var(--text-tertiary)" }}>
-              Needs a Google service account + Anthropic key — set up later.
-            </p>
-          </Panel>
-          <GoalsCard />
+          <FinancePulseCard />
+          <KeyBlockersCard />
         </div>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           <SessionCard />
           <HabitTracker />
-          <CrmCard />
+          <CalendarCard />
         </div>
-        <div className="flex flex-col gap-4">
-          <Panel>
-            <SectionLabel num="07" text="Nutrition" />
-            <p style={{ color: "var(--text-tertiary)" }}>
-              AI meal estimation needs an Anthropic/OpenAI key — set up later.
-            </p>
-          </Panel>
+        <div className="flex flex-col gap-3">
+          <NutritionCard />
         </div>
       </div>
     </Shell>

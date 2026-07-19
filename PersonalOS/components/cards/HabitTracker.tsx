@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Panel } from "../Panel";
-import { SectionLabel } from "../SectionLabel";
+import { CardHeader, DashPanel } from "../dashboard/DashCard";
 import { localDateKey } from "@/lib/date";
 
 export function HabitTracker() {
@@ -42,10 +41,14 @@ export function HabitTracker() {
   }
 
   return (
-    <Panel>
-      <SectionLabel num="03" text="Habits" />
+    <DashPanel>
+      <CardHeader
+        num="03"
+        title="HABITS"
+        right={<span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{done.length}/{habits.length} · {Math.round((done.length / Math.max(habits.length, 1)) * 100)}%</span>}
+      />
       <div className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>
-        {done.length}/{habits.length} · {loaded ? "synced" : "loading…"}
+        {loaded ? "synced" : "loading…"}
       </div>
       <div className="grid grid-cols-2 gap-2">
         {habits.map((h) => {
@@ -66,6 +69,6 @@ export function HabitTracker() {
           );
         })}
       </div>
-    </Panel>
+    </DashPanel>
   );
 }
