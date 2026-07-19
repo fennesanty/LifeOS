@@ -5,9 +5,8 @@ import { Panel } from "../Panel";
 import { SectionLabel } from "../SectionLabel";
 import { localDateKey } from "@/lib/date";
 
-const DEFAULT_HABITS = ["Water", "Movement", "Reading", "Deep work", "No sugar", "Sleep 8h"];
-
 export function HabitTracker() {
+  const [habits, setHabits] = useState<string[]>([]);
   const [done, setDone] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const dateKey = localDateKey();
@@ -16,6 +15,10 @@ export function HabitTracker() {
     const cacheKey = `pos-habits-${dateKey}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) setDone(JSON.parse(cached));
+
+    fetch("/api/habits/config")
+      .then((r) => r.json())
+      .then((d) => setHabits(d.habits ?? []));
 
     fetch(`/api/habits?days=1`)
       .then((r) => r.json())
@@ -34,7 +37,7 @@ export function HabitTracker() {
     await fetch(`/api/habits/${dateKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ done: next, total: DEFAULT_HABITS.length }),
+      body: JSON.stringify({ done: next, total: habits.length }),
     });
   }
 
@@ -42,10 +45,10 @@ export function HabitTracker() {
     <Panel>
       <SectionLabel num="03" text="Habits" />
       <div className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>
-        {done.length}/{DEFAULT_HABITS.length} · {loaded ? "synced" : "loading…"}
+        {done.length}/{habits.length} · {loaded ? "synced" : "loading…"}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {DEFAULT_HABITS.map((h) => {
+        {habits.map((h) => {
           const active = done.includes(h);
           return (
             <button
