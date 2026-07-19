@@ -39,7 +39,7 @@ function MiniPanel({ children }: { children: React.ReactNode }) {
 export function BlueprintPreview() {
   return (
     <Panel className="col-span-1 lg:col-span-3">
-      <SectionLabel num="00" text="Blueprint — Miles Deutscher's Personal OS mockup" />
+      <SectionLabel num="00" text="Blueprint — Fenne Santy's Personal OS mockup" />
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--line-soft)", background: "#050505" }}>
         {/* top rail */}
         <div
@@ -48,7 +48,7 @@ export function BlueprintPreview() {
         >
           <div className="flex items-center gap-2">
             <span style={{ color: "var(--good)" }}>●</span>
-            <span style={{ color: "var(--text-primary)" }}>{"MILES OS // V3.1"}</span>
+            <span style={{ color: "var(--text-primary)" }}>{"FENNE OS // V1"}</span>
             <span className="ml-3 rounded px-2 py-0.5" style={{ border: "1px solid var(--line)" }}>HOME</span>
             <span>CRM</span>
             <span>FINANCE</span>
@@ -59,7 +59,7 @@ export function BlueprintPreview() {
             <span>NDX 18,240</span>
             <span>XAU $2,384</span>
             <span>MAY 08, 2026 15:38</span>
-            <span className="rounded px-1.5 py-0.5" style={{ border: "1px solid var(--line)" }}>MD</span>
+            <span className="rounded px-1.5 py-0.5" style={{ border: "1px solid var(--line)" }}>FS</span>
           </div>
         </div>
 
