@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { AUTH_COOKIE, checkApiSecret, verifySessionToken } from "@/lib/auth";
+import { AUTH_COOKIE, checkApiSecret, verifySessionToken } from "./lib/auth";
 
 const PUBLIC_PATHS = ["/login", "/api/auth/login"];
 // Webhook/cron routes authenticate via their own secret header, not the cookie.
