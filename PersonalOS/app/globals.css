@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Personal OS design tokens — "Vitality" palette carried over
+   from LifeOS/theme.css, translated to oklch. Names match the
+   old --bg-deep / --good / --warn / --bad / --line tokens so the
+   two dashboards still feel like the same product.
+   ============================================================ */
+:root {
+  --bg-deep: oklch(0.16 0.02 165);
+  --bg: oklch(0.16 0.02 165);
+  --bg-glow: oklch(0.24 0.03 155);
+
+  --text-primary: oklch(0.94 0.01 150);
+  --text-secondary: oklch(0.72 0.03 155);
+  --text-tertiary: oklch(0.55 0.03 155);
+  --text-quaternary: oklch(0.4 0.02 155);
+
+  --good: oklch(0.85 0.15 160);
+  --warn: oklch(0.83 0.12 80);
+  --bad: oklch(0.75 0.15 20);
+
+  --line: oklch(0.85 0.15 160 / 0.16);
+  --line-soft: oklch(0.85 0.15 160 / 0.1);
+  --line-strong: oklch(0.85 0.15 160 / 0.35);
+
+  --font: var(--font-hanken), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: var(--font-newsreader), Georgia, serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 18px;
+}
+
+@theme inline {
+  --color-bg-deep: var(--bg-deep);
+  --color-bg-glow: var(--bg-glow);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-quaternary: var(--text-quaternary);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --font-sans: var(--font);
+  --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
+}
+
+html,
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.title-serif {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* "·0N LABEL ——" numbered section header */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-family: var(--font-mono);
+}
+.section-label .sl-num {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+.section-label .sl-num::before {
+  content: "·";
+  margin-right: 1px;
+}
+.section-label .sl-text {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--line), transparent);
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--bg-glow) 60%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 20px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in oklch, var(--bg-glow) 40%, transparent);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.pill:hover {
+  border-color: var(--line-strong);
+  color: var(--text-primary);
+}
+.pill-active {
+  background: var(--good);
+  border-color: var(--good);
+  color: var(--bg-deep);
+  font-weight: 700;
+}
+
+.badge-tier1,
+.badge-tier2 {
+  display: inline-flex;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.badge-tier1 {
+  color: var(--bg-deep);
+  border-color: var(--good);
+  background: var(--good);
+}
+.badge-tier2 {
+  color: var(--text-tertiary);
+  border-color: var(--line);
+  background: color-mix(in oklch, var(--good) 3%, transparent);
+}
