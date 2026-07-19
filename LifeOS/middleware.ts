@@ -12,15 +12,22 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Programmatic access (CLI, cron, scripts) via shared secret header.
-  const apiSecret = req.headers.get("x-api-secret");
-  if (checkApiSecret(apiSecret)) {
-    return NextResponse.next();
-  }
+  try {
+    // Programmatic access (CLI, cron, scripts) via shared secret header.
+    const apiSecret = req.headers.get("x-api-secret");
+    if (checkApiSecret(apiSecret)) {
+      return NextResponse.next();
+    }
 
-  const token = req.cookies.get(AUTH_COOKIE)?.value;
-  if (await verifySessionToken(token)) {
-    return NextResponse.next();
+    const token = req.cookies.get(AUTH_COOKIE)?.value;
+    if (await verifySessionToken(token)) {
+      return NextResponse.next();
+    }
+  } catch (err) {
+    // Fail safe: a misconfigured/missing env var (e.g. AUTH_SECRET not set
+    // in Vercel yet) must never crash the Edge Function with a 500 — just
+    // treat the request as unauthenticated.
+    console.error("auth check failed in middleware:", err);
   }
 
   if (pathname.startsWith("/api/")) {
