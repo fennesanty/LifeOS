@@ -1,10 +1,1 @@
-node_modules/
-.next/
-out/
-build/
-.env
-.env.local
-.env*.local
-*.tsbuildinfo
-next-env.d.ts
-.vercel
+.claude/
