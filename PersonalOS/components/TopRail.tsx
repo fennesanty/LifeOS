@@ -4,8 +4,8 @@ const TABS = ["Home", "CRM", "Finance", "Review"] as const;
 const TAB_HREF: Record<(typeof TABS)[number], string> = {
   Home: "/",
   CRM: "/crm",
-  Finance: "/",
-  Review: "/crm",
+  Finance: "/finance",
+  Review: "/review",
 };
 
 export function TopRail({ active = "Home" }: { active?: (typeof TABS)[number] }) {

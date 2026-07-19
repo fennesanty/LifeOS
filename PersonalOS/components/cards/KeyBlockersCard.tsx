@@ -14,10 +14,15 @@ function toneFor(urgency: string): "hot" | "warm" | "cool" {
 export function KeyBlockersCard() {
   const [blockers, setBlockers] = useState<Task[]>([]);
   const [title, setTitle] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
     const res = await fetch("/api/tasks?status=open");
-    if (!res.ok) return;
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(`Load failed (${res.status}): ${body.error ?? "unknown"}`);
+      return;
+    }
     const data = await res.json();
     setBlockers((data.tasks as Task[]).filter((t) => t.tags?.includes("blocker")));
   }
@@ -30,12 +35,18 @@ export function KeyBlockersCard() {
     e.preventDefault();
     if (!title.trim()) return;
     const t = title.trim();
-    setTitle("");
-    await fetch("/api/tasks", {
+    setError(null);
+    const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: t, urgency: "this_week", tags: ["blocker"] }),
     });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(`Save failed (${res.status}): ${body.error ?? "unknown"}`);
+      return; // keep the typed text so nothing looks "lost"
+    }
+    setTitle("");
     load();
   }
 
@@ -58,6 +69,11 @@ export function KeyBlockersCard() {
       <form onSubmit={addBlocker} className="mb-2">
         <DashInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a blocker…" />
       </form>
+      {error && (
+        <div className="text-[10px] mb-2" style={{ color: "var(--bad)" }}>
+          {error}
+        </div>
+      )}
       <div className="flex flex-col gap-2 text-xs">
         {blockers.length === 0 ? (
           <span style={{ color: "var(--text-tertiary)" }}>No blockers.</span>
