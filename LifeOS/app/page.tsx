@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Shell } from "@/components/Shell";
 import { Panel } from "@/components/Panel";
 import { SectionLabel } from "@/components/SectionLabel";
+import { BlueprintPreview } from "@/components/BlueprintPreview";
 import { AUTH_COOKIE, verifySessionToken } from "@/lib/auth";
 
 export default async function Home() {
@@ -15,6 +16,7 @@ export default async function Home() {
   return (
     <Shell>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] gap-4">
+        <BlueprintPreview />
         <div className="flex flex-col gap-4">
           <Panel>
             <SectionLabel num="01" text="Operator" />
